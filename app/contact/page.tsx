@@ -28,6 +28,7 @@ export default function ContactPage() {
   const router = useRouter()
   const [inquiries, setInquiries] = useState<Inquiry[]>([])
   const [loading, setLoading] = useState(true)
+  const [authLoading, setAuthLoading] = useState(true)
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -57,7 +58,6 @@ export default function ContactPage() {
     const userId = userData.user?.id
     if (!userId) {
       console.warn('❗ 유저 ID 없음 — 로그인 상태 확인 필요')
-      router.push('/login')
       setLoading(false)
       return
     }
@@ -92,8 +92,18 @@ export default function ContactPage() {
   }
 
   useEffect(() => {
-    fetchInquiries()
-  }, [])
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.replace('/login')
+        return
+      }
+      setAuthLoading(false)
+      await fetchInquiries()
+    }
+
+    checkAuth()
+  }, [router])
 
   const formatTime = (iso: string) => {
     const date = new Date(iso)
@@ -102,6 +112,10 @@ export default function ContactPage() {
     return isToday
       ? date.toTimeString().slice(0, 5)
       : date.toISOString().slice(0, 10).replace(/-/g, '/')
+  }
+
+  if (authLoading) {
+    return <Loading />
   }
 
   return (

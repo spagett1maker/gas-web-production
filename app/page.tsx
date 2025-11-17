@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { supabase } from '@/lib/supabase'
+import { Loading } from '@/components/ui/Loading'
 
 const SERVICES = [
   { key: 'burner', label: '화구교체', image: '/images/burner.png' },
@@ -17,11 +19,31 @@ const SERVICES = [
 
 export default function HomePage() {
   const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session) {
+        router.replace('/login')
+        return
+      }
+
+      setLoading(false)
+    }
+
+    checkAuth()
+  }, [router])
 
   const filtered = SERVICES.filter((s) =>
     s.label.replace(/\s/g, '').includes(search.replace(/\s/g, ''))
   )
+
+  if (loading) {
+    return <Loading />
+  }
 
   return (
     <div className="min-h-screen bg-white pb-20">

@@ -23,6 +23,12 @@ export default function ServiceDetailPage() {
 
   useEffect(() => {
     const fetchServiceDetail = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.replace('/login')
+        return
+      }
+
       const { data, error } = await supabase
         .from('service_requests')
         .select(`
@@ -45,7 +51,7 @@ export default function ServiceDetailPage() {
     if (params.id) {
       fetchServiceDetail()
     }
-  }, [params.id])
+  }, [params.id, router])
 
   if (loading) {
     return <Loading />

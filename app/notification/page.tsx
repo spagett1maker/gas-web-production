@@ -9,34 +9,44 @@ import { formatRelativeDate, formatTime } from '@/utils/format'
 export default function NotificationPage() {
   const [notifications, setNotifications] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [authLoading, setAuthLoading] = useState(true)
   const router = useRouter()
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/login')
-        return
-      }
-
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        console.error('알림 로드 실패:', error)
-      } else {
-        setNotifications(data || [])
-      }
-      setLoading(false)
+  const fetchNotifications = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      return
     }
 
-    fetchNotifications()
-  }, [])
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('알림 로드 실패:', error)
+    } else {
+      setNotifications(data || [])
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.replace('/login')
+        return
+      }
+      setAuthLoading(false)
+      await fetchNotifications()
+    }
+
+    checkAuth()
+  }, [router])
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -49,6 +59,10 @@ export default function NotificationPage() {
       default:
         return '📌'
     }
+  }
+
+  if (authLoading) {
+    return <Loading />
   }
 
   return (

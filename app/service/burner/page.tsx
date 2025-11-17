@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { Loading } from '@/components/ui/Loading'
 import { formatPrice } from '@/utils/format'
 
 const ITEMS = [
@@ -19,8 +20,22 @@ const ITEMS = [
 export default function BurnerReplacePage() {
   const [counts, setCounts] = useState(Array(ITEMS.length).fill(0))
   const [loading, setLoading] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.replace('/login')
+        return
+      }
+      setAuthLoading(false)
+    }
+
+    checkAuth()
+  }, [router])
 
   const handleCount = (idx: number, diff: number) => {
     setCounts((prev) =>
@@ -102,6 +117,10 @@ export default function BurnerReplacePage() {
       // 알림 추가 (구현 필요)
       setShowModal(true)
     }
+  }
+
+  if (authLoading) {
+    return <Loading />
   }
 
   return (

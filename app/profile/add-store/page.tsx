@@ -28,6 +28,18 @@ export default function AddStorePage() {
   const mapMarkerRef = useRef<any>(null)
 
   useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.replace('/login')
+        return
+      }
+    }
+
+    checkAuth()
+  }, [router])
+
+  useEffect(() => {
     // 카카오맵 SDK가 로드되면 지도 초기화
     if (mapLoaded && window.kakao && window.kakao.maps) {
       initMap()
