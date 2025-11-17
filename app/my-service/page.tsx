@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { SERVICE_NAME_MAP } from '@/lib/constants'
 import { Loading } from '@/components/ui/Loading'
@@ -15,15 +16,16 @@ const STATUS_CONFIG = {
   '취소': { color: '#FF6B6B', bg: '#FFEAEA', icon: '❌' },
 }
 
-const SERVICE_ICONS: Record<string, string> = {
-  burner: '🔥',
-  valve: '🔧',
-  gas: '⚠️',
-  pipe: '🔩',
-  alarm: '🚨',
-  quote: '📋',
-  contract: '📝',
-  center: '☎️',
+const getServiceIcon = (serviceName: string): string => {
+  if (serviceName.includes('valve')) return '/images/valve.png'
+  if (serviceName.includes('gas')) return '/images/gas.png'
+  if (serviceName.includes('pipe')) return '/images/pipe.png'
+  if (serviceName.includes('burner')) return '/images/burner.png'
+  if (serviceName.includes('alarm')) return '/images/alarm.png'
+  if (serviceName.includes('quote')) return '/images/quote.png'
+  if (serviceName.includes('contract')) return '/images/contract.png'
+  if (serviceName.includes('center')) return '/images/center.png'
+  return '/images/default.png'
 }
 
 export default function MyServicePage() {
@@ -149,7 +151,7 @@ export default function MyServicePage() {
                 </p>
                 {grouped[date].map((service: any) => {
                   const statusConfig = STATUS_CONFIG[service.status as keyof typeof STATUS_CONFIG]
-                  const icon = SERVICE_ICONS[service.services.name] || '📦'
+                  const iconPath = getServiceIcon(service.services.name)
 
                   return (
                     <button
@@ -157,7 +159,14 @@ export default function MyServicePage() {
                       className="w-full flex items-center px-6 py-4 bg-white hover:bg-gray-50 transition-colors active:bg-gray-100"
                       onClick={() => router.push(`/my-service/${service.id}`)}
                     >
-                      <div className="text-3xl mr-4">{icon}</div>
+                      <div className="relative w-[38px] h-[38px] mr-4 flex-shrink-0">
+                        <Image
+                          src={iconPath}
+                          alt={SERVICE_NAME_MAP[service.services.name] || service.services.name}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
                       <span className="flex-1 text-left text-[17px] font-bold text-gray-800">
                         {SERVICE_NAME_MAP[service.services.name] || service.services.name}
                       </span>

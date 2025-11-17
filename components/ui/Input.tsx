@@ -20,8 +20,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           className={`
-            px-4 py-3 border rounded-lg
+            px-4 py-3 border rounded-lg text-gray-800
             focus:outline-none focus:ring-2 focus:ring-[#EB5A36] focus:border-transparent
+            placeholder-gray-400
             disabled:bg-gray-100 disabled:cursor-not-allowed
             ${error ? 'border-red-500' : 'border-gray-300'}
             ${fullWidth ? 'w-full' : ''}

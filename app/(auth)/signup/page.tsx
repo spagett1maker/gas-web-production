@@ -7,6 +7,7 @@ import { toInternational } from '@/utils/format'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Loading } from '@/components/ui/Loading'
+import Image from 'next/image'
 
 export default function SignupPage() {
   const [phone, setPhone] = useState('')
@@ -162,7 +163,17 @@ export default function SignupPage() {
 
       <div className="flex items-center justify-center min-h-screen px-6">
         <div className="w-full max-w-md">
-          <h1 className="text-3xl font-bold mb-8 text-center">회원가입</h1>
+          {/* <div className="flex justify-center mb-12">
+            <div className="w-[172.8px] h-[104.6px] relative">
+              <Image
+                src="/images/logo2.png"
+                alt="우리동네가스 로고"
+                fill
+                className="object-contain"
+              />
+            </div>
+          </div> */}
+          <h1 className="text-xl font-bold mb-8 text-center text-black">회원가입</h1>
 
           {/* 에러 메시지 */}
           {error && (

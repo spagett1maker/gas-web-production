@@ -5,10 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { Loading } from '@/components/ui/Loading'
-import { Card, CardBody } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { formatDate, formatTime } from '@/utils/format'
 import { SERVICE_NAME_MAP } from '@/lib/constants'
 
 interface ServiceRequest {
@@ -18,6 +15,7 @@ interface ServiceRequest {
   working_at: string | null
   completed_at: string | null
   canceled_at: string | null
+  service_name: string
   services: {
     name: string
   }
@@ -30,6 +28,20 @@ interface ServiceRequest {
 interface RequestDetail {
   key: string
   value: string
+}
+
+const PRICE = {
+  '(일반화구) 1열 1구': 19000,
+  '(일반화구) 2열 2구': 33000,
+  '(일반화구) 3열 3구': 75000,
+  '(시그마버너) 1열 1구': 27000,
+  '(시그마버너) 2열 2구': 40000,
+  '(시그마버너) 3열 3구': 140000,
+  '8미리 밸브교체': 15000,
+  '공기조절기 교체': 15000,
+  '경보기 교체': 15000,
+  '배관 철거': 15000,
+  '가스누출점검(기본출장비)': 3000,
 }
 
 const STATUS_CONFIG = {
@@ -168,9 +180,46 @@ export default function AdminServiceDetailPage() {
     setSubmitting(false)
   }
 
+  const rawSteps = [
+    { label: '요청됨', timestamp: request?.created_at },
+    { label: '작업 시행 중', timestamp: request?.working_at },
+    { label: '서비스 완료', timestamp: request?.completed_at },
+    { label: '취소됨', timestamp: request?.canceled_at },
+  ]
+
+  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+
+  useEffect(() => {
+    if (!request) return
+    if (request.status === '취소') {
+      setCurrentStepIndex(3)
+    } else {
+      setCurrentStepIndex(rawSteps.findLastIndex((step) => !!step.timestamp))
+    }
+  }, [request])
+
+  const stepList = rawSteps.map((step, idx) => {
+    const dateTime = step.timestamp ? new Date(step.timestamp) : null
+    return {
+      label: step.label,
+      date: dateTime
+        ? dateTime.toISOString().slice(5, 10).replace('-', '/')
+        : '',
+      time: dateTime ? dateTime.toTimeString().slice(0, 5) : '',
+      inactive: idx > currentStepIndex,
+      isActive: idx === currentStepIndex,
+    }
+  })
+
+  const total = details.reduce((sum, d) => {
+    const count = parseInt(d.value.replace(/[^0-9]/g, '')) || 0
+    const key = d.key || ''
+    const unitPrice = PRICE[key as keyof typeof PRICE] ?? 0
+    return sum + count * unitPrice
+  }, 0)
+
   const getStatusTime = () => {
     if (!request) return ''
-
     let rawTime: string | null | undefined = null
 
     switch (request.status) {
@@ -191,42 +240,10 @@ export default function AdminServiceDetailPage() {
     }
 
     if (!rawTime) return ''
-    return `${formatDate(rawTime)}, ${formatTime(rawTime)}`
-  }
-
-  const getCurrentStepIndex = () => {
-    if (!request) return 0
-
-    const steps = [
-      { label: '요청됨', timestamp: request.created_at },
-      { label: '작업 시행 중', timestamp: request.working_at },
-      { label: '서비스 완료', timestamp: request.completed_at },
-      { label: '취소됨', timestamp: request.canceled_at },
-    ]
-
-    if (request.status === '취소') return 3
-
-    return steps.findLastIndex((step) => !!step.timestamp)
-  }
-
-  const getStepList = () => {
-    if (!request) return []
-
-    const rawSteps = [
-      { label: '요청됨', timestamp: request.created_at },
-      { label: '작업 시행 중', timestamp: request.working_at },
-      { label: '서비스 완료', timestamp: request.completed_at },
-      { label: '취소됨', timestamp: request.canceled_at },
-    ]
-
-    const currentStepIndex = getCurrentStepIndex()
-
-    return rawSteps.map((step, idx) => ({
-      label: step.label,
-      date: step.timestamp ? formatDate(step.timestamp) : '',
-      time: step.timestamp ? formatTime(step.timestamp) : '',
-      isActive: idx === currentStepIndex,
-    }))
+    const dateObj = new Date(rawTime)
+    const date = dateObj.toISOString().slice(0, 10).replace(/-/g, '/')
+    const time = dateObj.toTimeString().slice(0, 5)
+    return `${date}, ${time}`
   }
 
   if (loading) {
@@ -244,10 +261,10 @@ export default function AdminServiceDetailPage() {
   const statusConfig =
     STATUS_CONFIG[request.status as keyof typeof STATUS_CONFIG] ||
     STATUS_CONFIG['요청됨']
-  const serviceName = request.services?.name || '알 수 없음'
+  const serviceName = request.services?.name || '화구교체'
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32">
+    <div className="min-h-screen bg-white pb-32">
       {/* 상단 헤더 */}
       <header className="pt-6 pb-4 px-5 flex items-center justify-between bg-white border-b border-gray-200 sticky top-0 z-10">
         <button onClick={() => router.back()} className="p-2 -ml-2">
@@ -269,87 +286,67 @@ export default function AdminServiceDetailPage() {
         <div className="w-7" />
       </header>
 
-      {/* 상태 안내 */}
-      <div
-        className="pt-6 pb-4 px-5 flex items-center justify-between"
-        style={{ backgroundColor: statusConfig.bgColor }}
-      >
-        <div className="flex-1">
-          <h2 className="text-gray-800 font-bold text-[18px] mb-1">
-            {statusConfig.title}
-          </h2>
-          <p className="text-gray-700 text-[13px]">{statusConfig.description}</p>
-        </div>
-        <div className="w-18 h-18 relative flex-shrink-0 ml-4">
-          <Image
-            src="/images/star.png"
-            alt="star"
-            width={72}
-            height={72}
-            className="object-contain"
-          />
-        </div>
-      </div>
-
       <div className="px-5 py-6 space-y-4">
+        {/* 상태 안내 */}
+        <div
+          className="p-4 flex items-center rounded-lg"
+          style={{ backgroundColor: statusConfig.bgColor }}
+        >
+          <div className="flex-1">
+            <p className="text-gray-800 font-bold text-[18px] mb-1">
+              {statusConfig.title}
+            </p>
+            <p className="text-gray-700 text-[13px]">{statusConfig.description}</p>
+          </div>
+          <div className="w-18 h-18 relative flex-shrink-0 ml-4">
+            <Image
+              src="/images/star.png"
+              alt="star"
+              width={72}
+              height={72}
+              className="object-contain"
+            />
+          </div>
+        </div>
+
         {/* 가게 정보 */}
-        <Card>
-          <CardBody>
-            <h3 className="text-[15px] text-gray-800 font-semibold mb-1">
-              {request.stores?.name || '가게 정보 없음'}
-            </h3>
-            <div className="flex items-center text-gray-600 text-[12px]">
-              <svg
-                className="w-4 h-4 text-[#EB5A36] mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              <span>{request.stores?.address || '주소 정보 없음'}</span>
-            </div>
-          </CardBody>
-        </Card>
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <p className="text-[15px] text-gray-800 font-semibold mb-2">
+            {request.stores?.name || '가게 정보 없음'}
+          </p>
+          <div className="flex items-center text-gray-600 text-[13px]">
+            <svg
+              className="w-4 h-4 text-[#EB5A36] mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <span>{request.stores?.address || '주소 정보 없음'}</span>
+          </div>
+        </div>
 
         {/* 상태 정보 */}
-        <Card>
-          <CardBody>
-            <button
-              onClick={() => setShowModal(true)}
-              className="w-full flex items-center justify-between"
-            >
-              <div className="flex items-center">
-                <svg
-                  className="w-4 h-4 text-gray-500 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <span className="text-gray-800 text-[12px]">
-                  {statusConfig.title} : {getStatusTime()}
-                </span>
-              </div>
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <button
+            onClick={() => setShowModal(true)}
+            className="w-full flex items-center justify-between"
+          >
+            <div className="flex items-center">
               <svg
-                className="w-4 h-4 text-[#EB5A36]"
+                className="w-4 h-4 text-gray-500 mr-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -358,137 +355,175 @@ export default function AdminServiceDetailPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M9 5l7 7-7 7"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-            </button>
-          </CardBody>
-        </Card>
+              <span className="text-gray-800 text-[13px]">
+                {statusConfig.title} : {getStatusTime()}
+              </span>
+            </div>
+            <svg
+              className="w-4 h-4 text-[#EB5A36]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
 
         {/* 요청 항목 */}
-        <Card>
-          <CardBody>
-            <h3 className="font-bold text-lg text-gray-800 mb-3">
-              {SERVICE_NAME_MAP[serviceName] || serviceName}
-            </h3>
-            <div className="space-y-3">
-              {details.map((item, idx) => (
-                <div key={idx} className="flex items-center">
-                  <span className="text-gray-600 text-base mr-2">{item.key}</span>
-                  <span className="bg-[#FFF1EF] rounded-full px-3 py-1 text-[#EB5A36] text-xs font-bold">
-                    x{item.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardBody>
-        </Card>
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <p className="font-bold text-lg text-gray-800 mb-4">
+            {SERVICE_NAME_MAP[serviceName] || '화구 교체 서비스'}
+          </p>
+          <div className="space-y-3 mb-4">
+            {details.map((item, idx) => (
+              <div key={idx} className="flex items-center">
+                <span className="text-gray-600 text-base mr-2">{item.key}</span>
+                <span className="bg-[#FFF1EF] rounded-full px-3 py-1 text-[#EB5A36] text-xs font-bold">
+                  x{item.value}
+                </span>
+              </div>
+            ))}
+          </div>
+          <button className="bg-[#FFF1EF] rounded-lg px-4 py-2 flex items-center hover:bg-[#FFE5E0] transition-colors">
+            <svg
+              className="w-4 h-4 text-[#EB5A36] mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <span className="text-[#EB5A36] text-[15px] font-semibold">
+              요청사항 자세히 보기
+            </span>
+          </button>
+        </div>
+
+        {/* 전체 요청 금액 */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+          <p className="text-gray-800 text-[16px] font-bold">전체 요청</p>
+          <p className="text-[#EB5A36] font-bold text-[18px]">
+            {total.toLocaleString()}원
+          </p>
+        </div>
       </div>
 
       {/* 하단 버튼 */}
       {(request.status === '요청됨' || request.status === '진행중') && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-5 py-6">
-          {request.status === '요청됨' ? (
-            <div className="flex gap-3">
-              <Button
-                onClick={() => handleStatusUpdate('진행중', 'working_at')}
-                disabled={submitting}
-                fullWidth
-              >
-                수락하기
-              </Button>
-              <Button
-                onClick={() => handleStatusUpdate('취소', 'canceled_at')}
-                disabled={submitting}
-                variant="secondary"
-                fullWidth
-              >
-                거절하기
-              </Button>
-            </div>
-          ) : (
-            <div className="flex gap-3">
-              <Button
-                onClick={() => handleStatusUpdate('완료', 'completed_at')}
-                disabled={submitting}
-                fullWidth
-              >
-                완료하기
-              </Button>
-              <Button
-                onClick={() => handleStatusUpdate('취소', 'canceled_at')}
-                disabled={submitting}
-                variant="secondary"
-                fullWidth
-              >
-                취소하기
-              </Button>
-            </div>
-          )}
+          <div className="flex gap-3 max-w-screen-xl mx-auto">
+            {request.status === '요청됨' ? (
+              <>
+                <button
+                  className="flex-1 bg-[#EB5A36] hover:bg-[#FF5A36] py-3 rounded-lg font-bold text-white transition-colors disabled:opacity-50"
+                  onClick={() => handleStatusUpdate('진행중', 'working_at')}
+                  disabled={submitting}
+                >
+                  수락하기
+                </button>
+                <button
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 py-3 rounded-lg font-bold text-gray-800 transition-colors disabled:opacity-50"
+                  onClick={() => handleStatusUpdate('취소', 'canceled_at')}
+                  disabled={submitting}
+                >
+                  거절하기
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="flex-1 bg-[#EB5A36] hover:bg-[#FF5A36] py-3 rounded-lg font-bold text-white transition-colors disabled:opacity-50"
+                  onClick={() => handleStatusUpdate('완료', 'completed_at')}
+                  disabled={submitting}
+                >
+                  완료하기
+                </button>
+                <button
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 py-3 rounded-lg font-bold text-gray-800 transition-colors disabled:opacity-50"
+                  onClick={() => handleStatusUpdate('취소', 'canceled_at')}
+                  disabled={submitting}
+                >
+                  취소하기
+                </button>
+              </>
+            )}
+          </div>
         </div>
       )}
 
       {/* 타임라인 모달 */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
         <div className="py-4">
-          <h3 className="text-[16px] font-semibold text-gray-800 mb-4 text-center">
-            요청 처리 기록
-          </h3>
-
-          <div className="border-t border-gray-200 pt-4 mb-4">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-gray-600 text-[13px]">서비스 처리 ID</span>
-              <span className="text-gray-800 font-bold text-[14px]">
-                {request.id.slice(0, 4)}-{request.id.slice(-4)}
-              </span>
-            </div>
+          <div className="flex justify-between items-center mb-6">
+            <button onClick={() => setShowModal(false)}>
+              <p className="text-[#E64B32] text-[14px]">닫기</p>
+            </button>
+            <p className="text-gray-800 text-[16px] font-semibold">
+              요청 처리 기록
+            </p>
+            <div className="w-9" />
           </div>
 
-          <div className="border-t border-gray-200 pt-6">
-            {getStepList().map((step, idx) => {
-              const isLast = idx === getStepList().length - 1
-              return (
-                <div key={idx} className="flex items-start mb-6 last:mb-0">
-                  {/* 날짜/시간 */}
-                  <div className="w-16 text-right mr-3">
-                    <p className="text-gray-800 text-[13px] font-medium">
-                      {step.date}
-                    </p>
-                    <p className="text-gray-500 text-[12px]">{step.time}</p>
-                  </div>
+          <div className="h-px bg-[#DBDBDB] -mx-6 mb-4" />
 
-                  {/* 타임라인 */}
-                  <div className="flex flex-col items-center mr-3">
-                    <div
-                      className={`w-2.5 h-2.5 rounded-full ${
-                        step.isActive ? 'bg-[#FF5A36]' : 'bg-gray-300'
-                      }`}
-                    />
-                    {!isLast && (
-                      <div className="w-px h-20 bg-gray-200 my-1" />
-                    )}
-                  </div>
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-gray-500 text-[13px]">서비스 처리 ID</p>
+            <p className="text-gray-800 font-bold text-[14px]">
+              {request.id.slice(0, 4)}-{request.id.slice(-4)}
+            </p>
+          </div>
 
-                  {/* 상태 박스 */}
+          <div className="h-2 bg-[#F6F6F5] -mx-6 mb-12" />
+
+          {stepList.map((step, idx) => {
+            const isLast = idx === stepList.length - 1
+            return (
+              <div key={idx} className="flex items-start overflow-visible mb-0">
+                {/* 날짜/시간 */}
+                <div className="w-14 text-right mr-2">
+                  <p className="text-gray-800 text-[13px] font-medium mb-1">
+                    {step.date}
+                  </p>
+                  <p className="text-gray-400 text-[12px]">{step.time}</p>
+                </div>
+
+                {/* 타임라인 */}
+                <div className="flex flex-col items-center mr-3">
                   <div
-                    className={`flex-1 rounded-md px-4 py-3 ${
-                      step.isActive ? 'bg-gray-100' : 'bg-gray-50'
+                    className={`w-[10px] h-[10px] rounded-full ${
+                      step.isActive ? 'bg-[#FF5A36]' : 'bg-[#ddd]'
+                    }`}
+                  />
+                  {!isLast && <div className="w-[1px] h-20 bg-[#E0E0E0]" />}
+                </div>
+
+                {/* 상태 박스 */}
+                <div className="flex-1 rounded-md -mt-5 px-4 py-5 bg-[#F6F6F5]">
+                  <p
+                    className={`text-[14px] ${
+                      step.isActive ? 'text-gray-800 font-bold' : 'text-gray-500'
                     }`}
                   >
-                    <p
-                      className={`text-[14px] ${
-                        step.isActive
-                          ? 'text-gray-800 font-bold'
-                          : 'text-gray-500'
-                      }`}
-                    >
-                      {step.label}
-                    </p>
-                  </div>
+                    {step.label}
+                  </p>
                 </div>
-              )
-            })}
-          </div>
+              </div>
+            )
+          })}
         </div>
       </Modal>
     </div>

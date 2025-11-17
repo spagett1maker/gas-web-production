@@ -196,7 +196,7 @@ export default function LoginPage() {
           onChange={(e) => handleInputChange(e.target.value)}
           disabled={loading}
           fullWidth
-          className="mb-2"
+          className="mb-4"
         />
 
         {/* 입력창(OTP/비밀번호) 분기 */}

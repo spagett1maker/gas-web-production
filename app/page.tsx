@@ -56,7 +56,15 @@ export default function HomePage() {
       {/* 상단 헤더 */}
       <header className="pt-6 pb-4 px-6 flex items-center justify-between">
         <div className="w-10" />
-        <h1 className="text-2xl font-bold text-[#EB5A36]">우리동네가스</h1>
+        <div className="relative w-[100px] h-[57px]">
+          <Image
+            src="/images/logo2.png"
+            alt="우리동네가스 로고"
+            fill
+            className="object-contain"
+            priority
+          />
+        </div>
         <button
           onClick={() => router.push('/notification')}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -143,7 +151,7 @@ export default function HomePage() {
                     className="object-contain"
                   />
                 </div>
-                <span className="text-[15px] text-gray-800 font-medium text-center leading-tight whitespace-pre-line px-2">
+                <span className="text-[13px] text-gray-800 font-medium text-center leading-tight whitespace-pre-line px-2">
                   {item.label}
                 </span>
               </button>
