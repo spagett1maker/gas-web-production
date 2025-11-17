@@ -24,14 +24,20 @@ export default function HomePage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
 
-      if (!session) {
-        router.replace('/login')
-        return
+        if (error || !session) {
+          // 클라이언트 사이드 리다이렉트를 더 확실하게
+          window.location.href = '/login'
+          return
+        }
+
+        setLoading(false)
+      } catch (error) {
+        console.error('Auth check error:', error)
+        window.location.href = '/login'
       }
-
-      setLoading(false)
     }
 
     checkAuth()
