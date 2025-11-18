@@ -274,13 +274,13 @@ export default function AddStorePage() {
         </header>
 
         {/* 지도 */}
-        <div id="map" className="w-full h-[300px] flex-shrink-0" />
+        {/* <div id="map" className="w-full h-[300px] flex-shrink-0" /> */}
 
         {/* 위치 정보 입력 영역 */}
         <div className="flex-1 bg-white px-6 pt-6 pb-24 overflow-y-auto">
-          <h2 className="font-bold text-[18px] mb-4 text-center text-gray-800">
+          {/* <h2 className="font-bold text-[18px] mb-4 text-center text-gray-800">
             위치 정보
-          </h2>
+          </h2> */}
 
           <div className="mb-4 w-full">
             <Input
