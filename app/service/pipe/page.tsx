@@ -7,7 +7,13 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Loading } from '@/components/ui/Loading'
 
+const OPTIONS = [
+  'LPG',
+  'LNG(도시가스)'
+]
+
 export default function PipeRemovalPage() {
+  const [selected, setSelected] = useState<number | null>(null)
   const [extra, setExtra] = useState('')
   const [loading, setLoading] = useState(false)
   const [authLoading, setAuthLoading] = useState(true)
@@ -28,6 +34,8 @@ export default function PipeRemovalPage() {
   }, [router])
 
   const handleSubmit = async () => {
+    if (selected === null) return
+
     if (extra === '') return
 
     setLoading(true)
@@ -84,10 +92,18 @@ export default function PipeRemovalPage() {
     const details = [
       {
         request_id: request.id,
-        key: '추가 요청사항',
-        value: extra,
+        key: '경보기 종류',
+        value: OPTIONS[selected],
       },
     ]
+
+    if (extra.trim()) {
+      details.push({
+        request_id: request.id,
+        key: '추가 요청사항',
+        value: extra,
+      })
+    }
 
     const { error: detailError } = await supabase
       .from('request_details')
@@ -147,6 +163,29 @@ export default function PipeRemovalPage() {
       </header>
 
       <div className="px-5 pt-6 pb-24">
+      {OPTIONS.map((opt, idx) => {
+          const isActive = selected === idx
+          return (
+            <button
+              key={opt}
+              onClick={() => setSelected(idx)}
+              className={`w-full flex items-center rounded-2xl px-4 py-5 mb-4 border transition-colors ${
+                isActive ? 'border-[#EB5A36]' : 'border-gray-200'
+              }`}
+            >
+              <div className="mr-3">
+                <div
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    isActive ? 'border-[#EB5A36]' : 'border-gray-300'
+                  }`}
+                >
+                  {isActive && <div className="w-3.5 h-3.5 rounded-full bg-[#EB5A36]" />}
+                </div>
+              </div>
+              <span className="text-[17px] text-gray-800">{opt}</span>
+            </button>
+          )
+        })}
         {/* 추가 요청사항 */}
         <textarea
           className="w-full min-h-[120px] bg-[#F6F7FB] rounded-2xl px-4 py-4 text-[15px] text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-[#EB5A36]"
