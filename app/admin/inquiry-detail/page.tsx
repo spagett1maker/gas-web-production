@@ -131,6 +131,39 @@ function AdminInquiryDetailContent() {
       return
     }
 
+    // 문의 상태 변경 시 사용자에게 알림 발송
+    if (inquiry.user_id && newStatus !== '접수됨') {
+      const statusMessages = {
+        처리중: {
+          title: '문의가 처리 중입니다',
+          message: `문의하신 "${inquiry.title}" 건이 현재 처리 중입니다.`,
+        },
+        완료: {
+          title: '문의가 완료되었습니다',
+          message: `문의하신 "${inquiry.title}" 건이 완료되었습니다. 답변을 확인해주세요.`,
+        },
+        보류: {
+          title: '문의가 보류되었습니다',
+          message: `문의하신 "${inquiry.title}" 건이 보류되었습니다. 추가 정보가 필요할 수 있습니다.`,
+        },
+      }
+
+      const notificationContent =
+        statusMessages[newStatus as keyof typeof statusMessages]
+
+      if (notificationContent) {
+        await supabase.from('notifications').insert([
+          {
+            user_id: inquiry.user_id,
+            type: 'inquiry',
+            title: notificationContent.title,
+            message: notificationContent.message,
+            read: false,
+          },
+        ])
+      }
+    }
+
     setInquiry({ ...inquiry, status: newStatus })
     alert(`상태가 '${newStatus}'로 변경되었습니다.`)
   }
@@ -154,6 +187,19 @@ function AdminInquiryDetailContent() {
       alert('답변 등록에 실패했습니다.')
       setSubmitting(false)
       return
+    }
+
+    // 답변 등록 후 사용자에게 알림 발송
+    if (inquiry?.user_id) {
+      await supabase.from('notifications').insert([
+        {
+          user_id: inquiry.user_id,
+          type: 'inquiry',
+          title: '문의에 대한 답변이 등록되었습니다',
+          message: `문의하신 "${inquiry.title}" 건에 새로운 답변이 등록되었습니다.`,
+          read: false,
+        },
+      ])
     }
 
     setResponseText('')

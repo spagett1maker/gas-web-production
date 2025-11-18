@@ -141,16 +141,40 @@ export default function AdminServiceDetailPage() {
       return
     }
 
-    // 2. 알림 생성
-    const { data: sessionData } = await supabase.auth.getSession()
-    const userId = sessionData?.session?.user.id
+    // 2. 서비스를 요청한 사용자에게 알림 생성
+    const { data: requestData } = await supabase
+      .from('service_requests')
+      .select('user_id')
+      .eq('id', request.id)
+      .single()
 
-    if (userId) {
+    if (requestData?.user_id) {
+      const statusMessages = {
+        진행중: {
+          title: '서비스 요청이 수락되었습니다',
+          message: `${SERVICE_NAME_MAP[serviceName] || '서비스'} 요청이 수락되어 작업이 시작됩니다.`,
+        },
+        완료: {
+          title: '서비스가 완료되었습니다',
+          message: `${SERVICE_NAME_MAP[serviceName] || '서비스'}가 성공적으로 완료되었습니다.`,
+        },
+        취소: {
+          title: '서비스 요청이 취소되었습니다',
+          message: `${SERVICE_NAME_MAP[serviceName] || '서비스'} 요청이 취소되었습니다. 자세한 내용은 고객센터로 문의해주세요.`,
+        },
+      }
+
+      const notificationContent =
+        statusMessages[newStatus as keyof typeof statusMessages] || {
+          title: '서비스 상태가 변경되었습니다',
+          message: `서비스 상태가 [${newStatus}]로 변경되었습니다.`,
+        }
+
       const insertData = {
-        user_id: userId,
-        type: 'status_update',
-        title: '서비스 상태 변경',
-        message: `서비스가 [${newStatus}] 상태로 변경되었습니다.`,
+        user_id: requestData.user_id,
+        type: 'service',
+        title: notificationContent.title,
+        message: notificationContent.message,
         read: false,
       }
 
@@ -384,14 +408,16 @@ export default function AdminServiceDetailPage() {
             {SERVICE_NAME_MAP[serviceName] || '화구 교체 서비스'}
           </p>
           <div className="space-y-3 mb-4">
-            {details.map((item, idx) => (
-              <div key={idx} className="flex items-center">
-                <span className="text-gray-600 text-base mr-2">{item.key}</span>
-                <span className="bg-[#FFF1EF] rounded-full px-3 py-1 text-[#EB5A36] text-xs font-bold">
-                  x{item.value}
-                </span>
-              </div>
-            ))}
+            {details
+              .filter((item) => !['방문 희망 날짜', '방문 희망 시간', '결제 방법'].includes(item.key))
+              .map((item, idx) => (
+                <div key={idx} className="flex items-center">
+                  <span className="text-gray-600 text-base mr-2">{item.key}</span>
+                  <span className="bg-[#FFF1EF] rounded-full px-3 py-1 text-[#EB5A36] text-xs font-bold">
+                    x{item.value}
+                  </span>
+                </div>
+              ))}
           </div>
           <button className="bg-[#FFF1EF] rounded-lg px-4 py-2 flex items-center hover:bg-[#FFE5E0] transition-colors">
             <svg
@@ -412,6 +438,68 @@ export default function AdminServiceDetailPage() {
             </span>
           </button>
         </div>
+
+        {/* 방문 정보 */}
+        {(details.find((d) => d.key === '방문 희망 날짜') ||
+          details.find((d) => d.key === '방문 희망 시간')) && (
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center mb-3">
+              <svg
+                className="w-5 h-5 text-[#EB5A36] mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <p className="font-bold text-base text-gray-800">방문 일정</p>
+            </div>
+            <div className="space-y-2">
+              {details
+                .filter((d) =>
+                  ['방문 희망 날짜', '방문 희망 시간'].includes(d.key)
+                )
+                .map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between">
+                    <span className="text-gray-600 text-[14px]">{item.key}</span>
+                    <span className="text-gray-800 font-semibold text-[14px]">
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* 결제 방법 */}
+        {details.find((d) => d.key === '결제 방법') && (
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center mb-3">
+              <svg
+                className="w-5 h-5 text-[#EB5A36] mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
+              </svg>
+              <p className="font-bold text-base text-gray-800">결제 방법</p>
+            </div>
+            <p className="text-gray-800 font-semibold text-[15px]">
+              {details.find((d) => d.key === '결제 방법')?.value}
+            </p>
+          </div>
+        )}
 
         {/* 전체 요청 금액 */}
         <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">

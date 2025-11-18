@@ -330,44 +330,108 @@ export default function ServiceDetailPage() {
             {SERVICE_NAME_MAP[service?.name] || service?.name || '서비스'}
           </p>
           <div className="space-y-3 mb-4">
-            {details.map((item, idx) => {
-              const itemImage = getItemImage(item.key)
-              const isExtraRequest = item.key === '추가 요청사항'
-              const isSelectionField = ['경보기 종류', '시공 종류'].includes(item.key)
+            {details
+              .filter((item) => !['방문 희망 날짜', '방문 희망 시간', '결제 방법'].includes(item.key))
+              .map((item, idx) => {
+                const itemImage = getItemImage(item.key)
+                const isExtraRequest = item.key === '추가 요청사항'
+                const isSelectionField = ['경보기 종류', '시공 종류'].includes(item.key)
 
-              return (
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex items-center flex-1">
-                    {itemImage && (
-                      <div className="w-12 h-12 bg-surface rounded-lg mr-3 flex-shrink-0 relative overflow-hidden">
-                        <Image
-                          src={itemImage}
-                          alt={item.key}
-                          fill
-                          className="object-contain p-1"
-                        />
+                return (
+                  <div key={idx} className="flex items-center justify-between">
+                    <div className="flex items-center flex-1">
+                      {itemImage && (
+                        <div className="w-12 h-12 bg-surface rounded-lg mr-3 flex-shrink-0 relative overflow-hidden">
+                          <Image
+                            src={itemImage}
+                            alt={item.key}
+                            fill
+                            className="object-contain p-1"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <span className="body text-secondary">{item.key}</span>
+                        {isExtraRequest && (
+                          <p className="body-sm text-tertiary mt-1">{item.value}</p>
+                        )}
+                        {isSelectionField && (
+                          <p className="body-sm font-medium text-primary mt-1">{item.value}</p>
+                        )}
                       </div>
-                    )}
-                    <div className="flex-1">
-                      <span className="body text-secondary">{item.key}</span>
-                      {isExtraRequest && (
-                        <p className="body-sm text-tertiary mt-1">{item.value}</p>
-                      )}
-                      {isSelectionField && (
-                        <p className="body-sm font-medium text-primary mt-1">{item.value}</p>
-                      )}
                     </div>
+                    {!isExtraRequest && !isSelectionField && (
+                      <span className="bg-primary-light rounded-full px-3 py-1 text-primary caption font-bold ml-2">
+                        {item.value}
+                      </span>
+                    )}
                   </div>
-                  {!isExtraRequest && !isSelectionField && (
-                    <span className="bg-primary-light rounded-full px-3 py-1 text-primary caption font-bold ml-2">
-                      {item.value}
-                    </span>
-                  )}
-                </div>
-              )
-            })}
+                )
+              })}
           </div>
         </div>
+
+        {/* 방문 정보 */}
+        {(details.find((d) => d.key === '방문 희망 날짜') ||
+          details.find((d) => d.key === '방문 희망 시간')) && (
+          <div className="bg-white border border-[var(--color-border)] rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center mb-3">
+              <svg
+                className="w-5 h-5 text-primary mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <p className="body font-bold text-primary">방문 일정</p>
+            </div>
+            <div className="space-y-2">
+              {details
+                .filter((d) =>
+                  ['방문 희망 날짜', '방문 희망 시간'].includes(d.key)
+                )
+                .map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between">
+                    <span className="body-sm text-secondary">{item.key}</span>
+                    <span className="body-sm font-semibold text-primary">
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* 결제 방법 */}
+        {details.find((d) => d.key === '결제 방법') && (
+          <div className="bg-white border border-[var(--color-border)] rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center mb-3">
+              <svg
+                className="w-5 h-5 text-primary mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
+              </svg>
+              <p className="body font-bold text-primary">결제 방법</p>
+            </div>
+            <p className="body font-semibold text-primary">
+              {details.find((d) => d.key === '결제 방법')?.value}
+            </p>
+          </div>
+        )}
 
         {/* 전체 요청 금액 */}
         {total > 0 && (

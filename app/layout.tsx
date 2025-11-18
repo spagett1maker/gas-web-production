@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import BottomTabBar from "@/components/BottomTabBar";
 import AdminTabBar from "@/components/AdminTabBar";
+import NotificationProvider from "@/components/NotificationProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,7 @@ export default function RootLayout({
         {children}
         <BottomTabBar />
         <AdminTabBar />
+        <NotificationProvider />
       </body>
     </html>
   );
