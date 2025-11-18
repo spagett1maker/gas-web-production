@@ -136,7 +136,7 @@ export default function MyServicePage() {
             />
           </svg>
         </button>
-        <h1 className="heading-2 text-primary">나의 서비스</h1>
+        <h1 className="heading-2 text-primary text-xl">나의 서비스</h1>
         <div className="w-7" />
       </header>
 
@@ -188,7 +188,7 @@ export default function MyServicePage() {
                   return (
                     <button
                       key={service.id}
-                      className="w-full flex items-center px-6 py-4 bg-white hover:bg-surface transition-colors active:bg-[var(--color-surface-hover)]"
+                      className="w-full flex items-center px-6 py-3 bg-white hover:bg-surface transition-colors active:bg-[var(--color-surface-hover)]"
                       onClick={() => router.push(`/my-service/${service.id}`)}
                     >
                       <div className="relative w-10 h-10 mr-4 flex-shrink-0">

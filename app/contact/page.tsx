@@ -137,7 +137,7 @@ export default function ContactPage() {
             />
           </svg>
         </button>
-        <h1 className="text-[22px] font-bold text-gray-800">문의하기</h1>
+        <h1 className="text-xl font-bold text-gray-800">문의하기</h1>
         <button
           onClick={() => router.push('/service/inquiry-create')}
           className="p-2 -mr-2"

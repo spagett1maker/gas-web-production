@@ -75,7 +75,7 @@ export default function ProfilePage() {
             />
           </svg>
         </button>
-        <h1 className="text-[22px] font-bold text-gray-800">프로필</h1>
+        <h1 className="text-xl font-bold text-gray-800">프로필</h1>
         <div className="w-7" />
       </header>
 

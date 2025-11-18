@@ -104,7 +104,7 @@ export default function HomePage() {
           </svg>
           <input
             type="text"
-            className="flex-1 bg-transparent px-3 body text-primary placeholder:text-tertiary outline-none"
+            className="flex-1 bg-transparent px-3 body/ text-base text-primary placeholder:text-tertiary outline-none"
             placeholder="어떤 서비스를 찾으시나요?"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -152,7 +152,7 @@ export default function HomePage() {
                     className="object-contain"
                   />
                 </div>
-                <span className="body-sm font-medium text-primary text-center leading-1 whitespace-pre-line px-2">
+                <span className="body-sm/ text-[12px] font-medium text-primary text-center leading-tight whitespace-pre-line px-2">
                   {item.label}
                 </span>
               </button>

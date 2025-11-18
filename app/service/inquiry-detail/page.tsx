@@ -136,7 +136,7 @@ function InquiryDetailContent() {
             />
           </svg>
         </button>
-        <h1 className="text-[22px] font-bold text-gray-800">문의 상세</h1>
+        <h1 className="text-xl font-bold text-gray-800">문의 상세</h1>
         <div className="w-7" />
       </header>
 
@@ -170,7 +170,7 @@ function InquiryDetailContent() {
             </div>
 
             {/* 제목 */}
-            <h2 className="text-[20px] font-bold text-gray-800 mb-3">
+            <h2 className="text-lg font-bold text-gray-800 mb-3">
               {inquiry.title}
             </h2>
 
