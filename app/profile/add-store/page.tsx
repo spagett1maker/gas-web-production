@@ -14,6 +14,7 @@ declare global {
 }
 
 const KAKAO_REST_API_KEY = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY || ''
+const KAKAO_JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY || ''
 
 export default function AddStorePage() {
   const router = useRouter()
@@ -236,9 +237,17 @@ export default function AddStorePage() {
   return (
     <>
       <Script
-        src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_REST_API_KEY}&autoload=false`}
+        src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JAVASCRIPT_KEY}&autoload=false`}
         onLoad={() => {
-          window.kakao.maps.load(() => setMapLoaded(true))
+          // window.kakao가 로드될 때까지 대기
+          const checkKakao = () => {
+            if (window.kakao && window.kakao.maps) {
+              window.kakao.maps.load(() => setMapLoaded(true))
+            } else {
+              setTimeout(checkKakao, 100)
+            }
+          }
+          checkKakao()
         }}
       />
 
@@ -273,12 +282,13 @@ export default function AddStorePage() {
             위치 정보
           </h2>
 
-          <div className="mb-4">
+          <div className="mb-4 w-full">
             <Input
               type="text"
               placeholder="가게 위치 (주소 검색)"
               value={address}
               onChange={(e) => handleAddressChange(e.target.value)}
+              className="w-full"
             />
           </div>
 
@@ -319,7 +329,7 @@ export default function AddStorePage() {
         </div>
 
         {/* 저장 버튼 고정 */}
-        <div className="fixed bottom-0 left-0 right-0 px-6 py-6 bg-white border-t border-gray-200">
+        <div className="fixed bottom-16 left-0 right-0 px-6 py-4 bg-white border-t border-[var(--color-border)] shadow-lg">
           <Button
             onClick={saveStore}
             disabled={!name.trim() || !address.trim()}

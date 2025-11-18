@@ -4,34 +4,43 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
   fullWidth?: boolean
+  size?: 'sm' | 'md' | 'lg'
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, fullWidth = false, className = '', ...props }, ref) => {
+  ({ label, error, fullWidth = false, size = 'md', className = '', ...props }, ref) => {
     const widthClass = fullWidth ? 'w-full' : ''
+
+    const sizeStyles = {
+      sm: 'px-3 py-2 text-sm rounded-lg',
+      md: 'px-4 py-3 text-base rounded-xl',
+      lg: 'px-5 py-4 text-lg rounded-xl',
+    }
 
     return (
       <div className={`${widthClass}`}>
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block body-sm font-medium text-secondary mb-2">
             {label}
           </label>
         )}
         <input
           ref={ref}
           className={`
-            px-4 py-3 border rounded-lg text-gray-800
-            focus:outline-none focus:ring-2 focus:ring-[#EB5A36] focus:border-transparent
-            placeholder-gray-400
-            disabled:bg-gray-100 disabled:cursor-not-allowed
-            ${error ? 'border-red-500' : 'border-gray-300'}
+            border text-primary bg-white
+            focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
+            placeholder:text-tertiary
+            disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-secondary
+            transition-all duration-200
+            ${error ? 'border-[var(--color-error)] focus:ring-[var(--color-error)]' : 'border-[var(--color-border)]'}
+            ${sizeStyles[size]}
             ${fullWidth ? 'w-full' : ''}
             ${className}
           `}
           {...props}
         />
         {error && (
-          <p className="mt-1 text-sm text-red-500">{error}</p>
+          <p className="mt-2 body-sm text-[var(--color-error)]">{error}</p>
         )}
       </div>
     )

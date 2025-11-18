@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
@@ -9,12 +10,12 @@ import { Loading } from '@/components/ui/Loading'
 import { formatPrice } from '@/utils/format'
 
 const ITEMS = [
-  { id: 1, name: '(일반화구) 1열 1구', price: 19000, icon: '🔥' },
-  { id: 2, name: '(일반화구) 2열 2구', price: 33000, icon: '🔥' },
-  { id: 3, name: '(일반화구) 3열 3구', price: 75000, icon: '🔥' },
-  { id: 4, name: '(시그마버너) 1열 1구', price: 27000, icon: '🔥' },
-  { id: 5, name: '(시그마버너) 2열 2구', price: 40000, icon: '🔥' },
-  { id: 6, name: '(시그마버너) 3열 3구', price: 140000, icon: '🔥' },
+  { id: 1, name: '(일반화구) 1열 1구', price: 19000, image: '/images/burner/1.png' },
+  { id: 2, name: '(일반화구) 2열 2구', price: 33000, image: '/images/burner/2.png' },
+  { id: 3, name: '(일반화구) 3열 3구', price: 75000, image: '/images/burner/3.png' },
+  { id: 4, name: '(시그마버너) 1열 1구', price: 27000, image: '/images/burner/4.png' },
+  { id: 5, name: '(시그마버너) 2열 2구', price: 40000, image: '/images/burner/5.png' },
+  { id: 6, name: '(시그마버너) 3열 3구', price: 140000, image: '/images/burner/6.jpg' },
 ]
 
 export default function BurnerReplacePage() {
@@ -170,9 +171,14 @@ export default function BurnerReplacePage() {
             key={item.id}
             className="flex items-center bg-white rounded-2xl border border-gray-200 px-4 py-3 mb-3 hover:border-[#EB5A36] transition-colors"
           >
-            {/* 아이콘 */}
-            <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center mr-4">
-              <span className="text-3xl">{item.icon}</span>
+            {/* 이미지 */}
+            <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center mr-4 relative overflow-hidden">
+              <Image
+                src={item.image}
+                alt={item.name}
+                fill
+                className="object-contain p-1"
+              />
             </div>
             {/* 정보 */}
             <div className="flex-1">

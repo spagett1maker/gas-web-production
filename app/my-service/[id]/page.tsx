@@ -8,7 +8,8 @@ import { SERVICE_NAME_MAP } from '@/lib/constants'
 import { Loading } from '@/components/ui/Loading'
 import { Modal } from '@/components/ui/Modal'
 
-const PRICE = {
+// 가격 정보 (가격이 있는 서비스만)
+const PRICE_MAP: Record<string, number> = {
   '(일반화구) 1열 1구': 19000,
   '(일반화구) 2열 2구': 33000,
   '(일반화구) 3열 3구': 75000,
@@ -17,29 +18,44 @@ const PRICE = {
   '(시그마버너) 3열 3구': 140000,
   '8미리 밸브교체': 15000,
   '공기조절기 교체': 15000,
-  '경보기 교체': 15000,
   '배관 철거': 15000,
-  '가스누출점검(기본출장비)': 3000,
+  '가스누출점검(기본출장비)': 30000,
+}
+
+// 서비스별 이미지 맵핑
+const SERVICE_IMAGES: Record<string, Record<string, string>> = {
+  burner: {
+    '(일반화구) 1열 1구': '/images/burner/1.png',
+    '(일반화구) 2열 2구': '/images/burner/2.png',
+    '(일반화구) 3열 3구': '/images/burner/3.png',
+    '(시그마버너) 1열 1구': '/images/burner/4.png',
+    '(시그마버너) 2열 2구': '/images/burner/5.png',
+    '(시그마버너) 3열 3구': '/images/burner/6.jpg',
+  },
+  valve: {
+    '8미리 밸브교체': '/images/valve/1.jpg',
+    '공기조절기 교체': '/images/valve/air.png',
+  },
 }
 
 const STATUS_CONFIG = {
   요청됨: {
-    bgColor: '#EAF5FE',
+    bgColor: '#EFF6FF',
     title: '서비스 요청됨',
     desc: '요청하신 서비스를 확인하고 있습니다.',
   },
   진행중: {
-    bgColor: '#FEFBEA',
+    bgColor: '#FEF3C7',
     title: '작업 시행 중',
     desc: '서비스가 현재 진행 중입니다.',
   },
   완료: {
-    bgColor: '#E6F4EA',
+    bgColor: '#D1FAE5',
     title: '서비스 완료',
     desc: '서비스가 성공적으로 완료되었습니다.',
   },
   취소: {
-    bgColor: '#FFEAEA',
+    bgColor: '#FEE2E2',
     title: '서비스 취소됨',
     desc: '요청하신 서비스가 취소되었습니다.',
   },
@@ -49,6 +65,7 @@ export default function ServiceDetailPage() {
   const params = useParams()
   const router = useRouter()
   const [request, setRequest] = useState<any>(null)
+  const [service, setService] = useState<any>(null)
   const [details, setDetails] = useState<any[]>([])
   const [store, setStore] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -65,17 +82,20 @@ export default function ServiceDetailPage() {
 
       if (!params.id) return
 
+      // 서비스 요청 정보 가져오기
       const { data: requestData } = await supabase
         .from('service_requests')
-        .select('*')
+        .select('*, services(name)')
         .eq('id', params.id)
         .single()
 
+      // 요청 상세 정보 가져오기
       const { data: detailData } = await supabase
         .from('request_details')
         .select('key, value')
         .eq('request_id', params.id)
 
+      // 가게 정보 가져오기
       if (requestData?.store_id) {
         const { data: storeData } = await supabase
           .from('stores')
@@ -87,6 +107,7 @@ export default function ServiceDetailPage() {
       }
 
       setRequest(requestData)
+      setService(requestData?.services)
       setDetails(detailData || [])
       setLoading(false)
     }
@@ -98,7 +119,7 @@ export default function ServiceDetailPage() {
     { label: '요청됨', timestamp: request?.created_at },
     { label: '작업 시행 중', timestamp: request?.working_at },
     { label: '서비스 완료', timestamp: request?.completed_at },
-    { label: '취소됨', timestamp: request?.cancled_at },
+    { label: '취소됨', timestamp: request?.canceled_at },
   ]
 
   useEffect(() => {
@@ -129,8 +150,8 @@ export default function ServiceDetailPage() {
 
   if (!request) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-gray-500">서비스를 찾을 수 없습니다.</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="body text-secondary">서비스를 찾을 수 없습니다.</p>
       </div>
     )
   }
@@ -139,10 +160,18 @@ export default function ServiceDetailPage() {
     STATUS_CONFIG[request?.status as keyof typeof STATUS_CONFIG] ||
     STATUS_CONFIG['요청됨']
 
+  // 전체 가격 계산
   const total = details.reduce((sum, d) => {
-    const count = parseInt(d.value.replace(/[^0-9]/g, '')) || 0
     const key = d.key || ''
-    const unitPrice = PRICE[key as keyof typeof PRICE] ?? 0
+
+    // 가격이 없는 필드들은 제외
+    const nonPriceFields = ['추가 요청사항', '경보기 종류', '시공 종류']
+    if (nonPriceFields.includes(key)) {
+      return sum
+    }
+
+    const count = parseInt(d.value.replace(/[^0-9]/g, '')) || 1
+    const unitPrice = PRICE_MAP[key] ?? 0
     return sum + count * unitPrice
   }, 0)
 
@@ -161,7 +190,7 @@ export default function ServiceDetailPage() {
         rawTime = request.completed_at
         break
       case '취소':
-        rawTime = request.cancled_at
+        rawTime = request.canceled_at
         break
       default:
         return ''
@@ -174,13 +203,19 @@ export default function ServiceDetailPage() {
     return `${date}, ${time}`
   }
 
+  // 아이템 이미지 가져오기
+  const getItemImage = (key: string) => {
+    const serviceName = service?.name || ''
+    return SERVICE_IMAGES[serviceName]?.[key] || null
+  }
+
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-background pb-20">
       {/* 상단 헤더 */}
-      <header className="pt-6 pb-4 px-5 flex items-center justify-between bg-white border-b border-gray-200 sticky top-0 z-10">
-        <button onClick={() => router.back()} className="p-2 -ml-2">
+      <header className="pt-6 pb-4 px-6 flex items-center justify-between bg-background border-b border-[var(--color-border)] sticky top-0 z-10">
+        <button onClick={() => router.back()} className="p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors">
           <svg
-            className="w-7 h-7 text-gray-800"
+            className="w-7 h-7 text-primary"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -193,21 +228,21 @@ export default function ServiceDetailPage() {
             />
           </svg>
         </button>
-        <h1 className="text-[22px] font-bold text-gray-800">세부정보</h1>
+        <h1 className="heading-2 text-primary">세부정보</h1>
         <div className="w-7" />
       </header>
 
-      <div className="px-5 py-6 space-y-4">
+      <div className="px-6 py-6 space-y-4">
         {/* 상태 안내 */}
         <div
-          className="p-4 flex items-center rounded-lg"
+          className="p-5 flex items-center rounded-2xl shadow-sm"
           style={{ backgroundColor: statusConfig.bgColor }}
         >
           <div className="flex-1">
-            <p className="text-gray-800 font-bold text-[18px] mb-1">
+            <p className="heading-3 text-primary mb-1">
               {statusConfig.title}
             </p>
-            <p className="text-gray-700 text-[13px]">{statusConfig.desc}</p>
+            <p className="body-sm text-secondary">{statusConfig.desc}</p>
           </div>
           <div className="w-18 h-18 relative flex-shrink-0 ml-4">
             <Image
@@ -221,13 +256,13 @@ export default function ServiceDetailPage() {
         </div>
 
         {/* 가게 정보 */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <p className="text-[15px] text-gray-800 font-semibold mb-2">
+        <div className="bg-white border border-[var(--color-border)] rounded-2xl p-5 shadow-sm">
+          <p className="body font-semibold text-primary mb-2">
             {store?.name || '가게 정보 없음'}
           </p>
-          <div className="flex items-center text-gray-600 text-[13px]">
+          <div className="flex items-center text-secondary body-sm">
             <svg
-              className="w-4 h-4 text-[#EB5A36] mr-1"
+              className="w-4 h-4 text-primary mr-2"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -250,14 +285,14 @@ export default function ServiceDetailPage() {
         </div>
 
         {/* 상태 정보 */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="bg-white border border-[var(--color-border)] rounded-2xl p-5 shadow-sm">
           <button
             onClick={() => setShowModal(true)}
-            className="w-full flex items-center justify-between"
+            className="w-full flex items-center justify-between hover:opacity-80 transition-opacity"
           >
             <div className="flex items-center">
               <svg
-                className="w-4 h-4 text-gray-500 mr-2"
+                className="w-5 h-5 text-secondary mr-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -269,12 +304,12 @@ export default function ServiceDetailPage() {
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <span className="text-gray-800 text-[13px]">
+              <span className="body-sm text-primary">
                 {statusConfig.title} : {getStatusTime()}
               </span>
             </div>
             <svg
-              className="w-4 h-4 text-[#EB5A36]"
+              className="w-5 h-5 text-primary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -290,108 +325,108 @@ export default function ServiceDetailPage() {
         </div>
 
         {/* 요청 항목 */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <p className="font-bold text-lg text-gray-800 mb-4">
-            {SERVICE_NAME_MAP[request?.service_name] || '화구 교체 서비스'}
+        <div className="bg-white border border-[var(--color-border)] rounded-2xl p-5 shadow-sm">
+          <p className="heading-3 text-primary mb-4">
+            {SERVICE_NAME_MAP[service?.name] || service?.name || '서비스'}
           </p>
           <div className="space-y-3 mb-4">
-            {details.map((item, idx) => (
-              <div key={idx} className="flex items-center">
-                <span className="text-gray-600 text-base mr-2">{item.key}</span>
-                <span className="bg-[#FFF1EF] rounded-full px-3 py-1 text-[#EB5A36] text-xs font-bold">
-                  x{item.value}
-                </span>
-              </div>
-            ))}
+            {details.map((item, idx) => {
+              const itemImage = getItemImage(item.key)
+              const isExtraRequest = item.key === '추가 요청사항'
+              const isSelectionField = ['경보기 종류', '시공 종류'].includes(item.key)
+
+              return (
+                <div key={idx} className="flex items-center justify-between">
+                  <div className="flex items-center flex-1">
+                    {itemImage && (
+                      <div className="w-12 h-12 bg-surface rounded-lg mr-3 flex-shrink-0 relative overflow-hidden">
+                        <Image
+                          src={itemImage}
+                          alt={item.key}
+                          fill
+                          className="object-contain p-1"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <span className="body text-secondary">{item.key}</span>
+                      {isExtraRequest && (
+                        <p className="body-sm text-tertiary mt-1">{item.value}</p>
+                      )}
+                      {isSelectionField && (
+                        <p className="body-sm font-medium text-primary mt-1">{item.value}</p>
+                      )}
+                    </div>
+                  </div>
+                  {!isExtraRequest && !isSelectionField && (
+                    <span className="bg-primary-light rounded-full px-3 py-1 text-primary caption font-bold ml-2">
+                      {item.value}
+                    </span>
+                  )}
+                </div>
+              )
+            })}
           </div>
-          <button className="bg-[#FFF1EF] rounded-lg px-4 py-2 flex items-center hover:bg-[#FFE5E0] transition-colors">
-            <svg
-              className="w-4 h-4 text-[#EB5A36] mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <span className="text-[#EB5A36] text-[15px] font-semibold">
-              요청사항 자세히 보기
-            </span>
-          </button>
         </div>
 
         {/* 전체 요청 금액 */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
-          <p className="text-gray-800 text-[16px] font-bold">전체 요청</p>
-          <p className="text-[#EB5A36] font-bold text-[18px]">
-            {total.toLocaleString()}원
-          </p>
-        </div>
+        {total > 0 && (
+          <div className="bg-white border border-[var(--color-border)] rounded-2xl p-5 flex items-center justify-between shadow-sm">
+            <p className="body font-bold text-primary">전체 요청</p>
+            <p className="heading-3 text-primary">
+              {total.toLocaleString()}원
+            </p>
+          </div>
+        )}
       </div>
 
       {/* 타임라인 모달 */}
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
-        <div className="py-4">
-          <div className="flex justify-between items-center mb-6">
-            <button onClick={() => setShowModal(false)}>
-              <p className="text-[#E64B32] text-[14px]">닫기</p>
-            </button>
-            <p className="text-gray-800 text-[16px] font-semibold">
-              요청 처리 기록
-            </p>
-            <div className="w-9" />
-          </div>
-
-          <div className="h-px bg-[#DBDBDB] -mx-6 mb-4" />
-
-          <div className="flex justify-between items-center mb-4">
-            <p className="text-gray-500 text-[13px]">서비스 처리 ID</p>
-            <p className="text-gray-800 font-bold text-[14px]">
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="요청 처리 기록">
+        <div className="py-2">
+          <div className="flex justify-between items-center mb-6 pb-4 border-b border-[var(--color-border)]">
+            <p className="body-sm text-secondary">서비스 처리 ID</p>
+            <p className="body font-bold text-primary">
               {request?.id?.slice(0, 4)}-{request?.id?.slice(-4)}
             </p>
           </div>
 
-          <div className="h-2 bg-[#F6F6F5] -mx-6 mb-12" />
+          <div className="space-y-6">
+            {stepList.map((step, idx) => {
+              const isLast = idx === stepList.length - 1
+              return (
+                <div key={idx} className="flex items-start">
+                  {/* 날짜/시간 */}
+                  <div className="w-16 text-right mr-3">
+                    <p className="body-sm font-medium text-primary">
+                      {step.date}
+                    </p>
+                    <p className="caption text-tertiary">{step.time}</p>
+                  </div>
 
-          {stepList.map((step, idx) => {
-            const isLast = idx === stepList.length - 1
-            return (
-              <div key={idx} className="flex items-start overflow-visible mb-0">
-                {/* 날짜/시간 */}
-                <div className="w-14 text-right mr-2">
-                  <p className="text-gray-800 text-[13px] font-medium mb-1">
-                    {step.date}
-                  </p>
-                  <p className="text-gray-400 text-[12px]">{step.time}</p>
-                </div>
+                  {/* 타임라인 */}
+                  <div className="flex flex-col items-center mr-3">
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        step.isActive ? 'bg-primary' : 'bg-gray-300'
+                      }`}
+                    />
+                    {!isLast && <div className="w-0.5 h-16 bg-[var(--color-border)]" />}
+                  </div>
 
-                {/* 타임라인 */}
-                <div className="flex flex-col items-center mr-3">
-                  <div
-                    className={`w-[10px] h-[10px] rounded-full ${
-                      step.isActive ? 'bg-[#FF5A36]' : 'bg-[#ddd]'
-                    }`}
-                  />
-                  {!isLast && <div className="w-[1px] h-20 bg-[#E0E0E0]" />}
+                  {/* 상태 박스 */}
+                  <div className="flex-1 rounded-xl px-4 py-3 bg-surface -mt-1">
+                    <p
+                      className={`body-sm ${
+                        step.isActive ? 'text-primary font-bold' : 'text-secondary'
+                      }`}
+                    >
+                      {step.label}
+                    </p>
+                  </div>
                 </div>
-
-                {/* 상태 박스 */}
-                <div className="flex-1 rounded-md -mt-5 px-4 py-5 bg-[#F6F6F5]">
-                  <p
-                    className={`text-[14px] ${
-                      step.isActive ? 'text-gray-800 font-bold' : 'text-gray-500'
-                    }`}
-                  >
-                    {step.label}
-                  </p>
-                </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       </Modal>
     </div>

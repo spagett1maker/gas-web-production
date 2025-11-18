@@ -16,7 +16,7 @@ const tabs: TabItem[] = [
     href: '/',
     icon: (active) => (
       <svg
-        className={`w-6 h-6 ${active ? 'text-[#EB5A36]' : 'text-gray-500'}`}
+        className={`w-6 h-6 transition-colors ${active ? 'text-primary' : 'text-tertiary'}`}
         fill={active ? 'currentColor' : 'none'}
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -35,7 +35,7 @@ const tabs: TabItem[] = [
     href: '/my-service',
     icon: (active) => (
       <svg
-        className={`w-6 h-6 ${active ? 'text-[#EB5A36]' : 'text-gray-500'}`}
+        className={`w-6 h-6 transition-colors ${active ? 'text-primary' : 'text-tertiary'}`}
         fill={active ? 'currentColor' : 'none'}
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -54,7 +54,7 @@ const tabs: TabItem[] = [
     href: '/contact',
     icon: (active) => (
       <svg
-        className={`w-6 h-6 ${active ? 'text-[#EB5A36]' : 'text-gray-500'}`}
+        className={`w-6 h-6 transition-colors ${active ? 'text-primary' : 'text-tertiary'}`}
         fill={active ? 'currentColor' : 'none'}
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -73,7 +73,7 @@ const tabs: TabItem[] = [
     href: '/profile',
     icon: (active) => (
       <svg
-        className={`w-6 h-6 ${active ? 'text-[#EB5A36]' : 'text-gray-500'}`}
+        className={`w-6 h-6 transition-colors ${active ? 'text-primary' : 'text-tertiary'}`}
         fill={active ? 'currentColor' : 'none'}
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -98,7 +98,7 @@ export default function BottomTabBar() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[var(--color-border)] z-50 md:hidden shadow-lg">
       <div className="flex justify-around items-center h-16">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href
@@ -106,12 +106,12 @@ export default function BottomTabBar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className="flex flex-col items-center justify-center flex-1 h-full"
+              className="flex flex-col items-center justify-center flex-1 h-full hover:bg-surface transition-colors"
             >
               {tab.icon(isActive)}
               <span
-                className={`text-xs mt-1 ${
-                  isActive ? 'text-[#EB5A36] font-semibold' : 'text-gray-500'
+                className={`caption mt-1 transition-colors ${
+                  isActive ? 'text-primary font-semibold' : 'text-tertiary'
                 }`}
               >
                 {tab.name}

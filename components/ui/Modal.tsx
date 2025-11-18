@@ -36,23 +36,24 @@ export const Modal = ({ isOpen, onClose, children, title, maxWidth = 'md' }: Mod
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-all duration-200"
         onClick={onClose}
       />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className={`relative bg-white rounded-2xl shadow-xl ${maxWidthClasses[maxWidth]} w-full mx-4`}
+          className={`relative bg-white rounded-2xl shadow-xl ${maxWidthClasses[maxWidth]} w-full mx-4 animate-in fade-in zoom-in-95 duration-200`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           {title && (
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
+              <h3 className="heading-3 text-primary">{title}</h3>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-tertiary hover:text-secondary transition-colors p-1 hover:bg-gray-100 rounded-lg"
+                aria-label="닫기"
               >
                 <svg
                   className="w-6 h-6"
@@ -72,7 +73,7 @@ export const Modal = ({ isOpen, onClose, children, title, maxWidth = 'md' }: Mod
           )}
 
           {/* Content */}
-          <div className="px-6 py-4">
+          <div className="px-6 py-5">
             {children}
           </div>
         </div>

@@ -94,7 +94,7 @@ export default function PaymentPage() {
       </div>
 
       {/* 하단 결제 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-5 py-6">
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-[var(--color-border)] px-6 py-4 shadow-lg">
         <Button
           onClick={() => setShowModal(true)}
           disabled={!selected}

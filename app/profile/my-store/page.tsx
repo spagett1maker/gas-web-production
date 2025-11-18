@@ -25,7 +25,7 @@ export default function MyStorePage() {
       }
 
       // 내 profile에서 default_store_id 가져오기
-      let defaultId = null
+      let defaultId: string | null = null
       const { data: profile } = await supabase
         .from('profiles')
         .select('default_store_id')
@@ -149,7 +149,7 @@ export default function MyStorePage() {
       </div>
 
       {/* 하단 적용 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-5 py-6">
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-[var(--color-border)] px-6 py-4 shadow-lg">
         <Button
           onClick={handleApply}
           disabled={selected === null}

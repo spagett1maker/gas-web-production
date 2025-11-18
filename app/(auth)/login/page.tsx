@@ -50,16 +50,44 @@ export default function LoginPage() {
     const internationalPhone = toInternational(phoneOrEmail)
 
     setLoading(true)
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      phone: internationalPhone
-    })
-    setLoading(false)
 
-    if (otpError) {
-      setError(otpError.message)
-    } else {
-      setOtpSent(true)
-      alert('인증번호가 전송되었습니다.')
+    try {
+      // 1. 먼저 등록된 전화번호인지 확인
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('phone', internationalPhone)
+
+      if (checkError) {
+        setLoading(false)
+        setError('전화번호 확인 중 오류가 발생했습니다.')
+        return
+      }
+
+      // 2. 등록되지 않은 전화번호면 에러
+      if (!existingUsers || existingUsers.length === 0) {
+        setLoading(false)
+        setError('등록되지 않은 전화번호입니다.\n회원가입을 먼저 진행해주세요.')
+        return
+      }
+
+      // 3. 등록된 전화번호이면 OTP 발송
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        phone: internationalPhone
+      })
+
+      setLoading(false)
+
+      if (otpError) {
+        setError(otpError.message)
+      } else {
+        setOtpSent(true)
+        alert('인증번호가 전송되었습니다.')
+      }
+    } catch (err) {
+      console.error('Login check error:', err)
+      setLoading(false)
+      setError('로그인 처리 중 오류가 발생했습니다.')
     }
   }
 

@@ -3,18 +3,25 @@ import { forwardRef, ButtonHTMLAttributes } from 'react'
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   title?: string
   variant?: 'primary' | 'secondary' | 'outline' | 'danger'
+  size?: 'sm' | 'md' | 'lg'
   fullWidth?: boolean
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ title, children, variant = 'primary', fullWidth = false, className = '', ...props }, ref) => {
-    const baseStyles = 'items-center rounded-[28px] shadow-md px-6 py-3 font-semibold text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+  ({ title, children, variant = 'primary', size = 'md', fullWidth = false, className = '', ...props }, ref) => {
+    const baseStyles = 'inline-flex items-center justify-center font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]'
 
     const variantStyles = {
-      primary: 'bg-[#EB5A36] hover:bg-[#FF5A36] text-white',
-      secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-800',
-      outline: 'border-2 border-[#EB5A36] text-[#EB5A36] hover:bg-[#EB5A36] hover:text-white',
-      danger: 'bg-red-500 hover:bg-red-600 text-white',
+      primary: 'bg-primary hover:bg-[var(--color-primary-hover)] text-white shadow-md hover:shadow-lg',
+      secondary: 'bg-gray-100 hover:bg-gray-200 text-primary border border-gray-200 hover:border-gray-300',
+      outline: 'border-2 border-primary text-primary hover:bg-primary hover:text-white',
+      danger: 'bg-[var(--color-error)] hover:bg-red-600 text-white shadow-md hover:shadow-lg',
+    }
+
+    const sizeStyles = {
+      sm: 'px-4 py-2 text-sm rounded-xl',
+      md: 'px-6 py-3 text-base rounded-2xl',
+      lg: 'px-8 py-4 text-lg rounded-2xl',
     }
 
     const widthClass = fullWidth ? 'w-full' : ''
@@ -22,7 +29,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={`${baseStyles} ${variantStyles[variant]} ${widthClass} ${className}`}
+        className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${widthClass} ${className}`}
         {...props}
       >
         {title || children}

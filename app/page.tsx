@@ -52,7 +52,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-background pb-20">
       {/* 상단 헤더 */}
       <header className="pt-6 pb-4 px-6 flex items-center justify-between">
         <div className="w-10" />
@@ -68,9 +68,10 @@ export default function HomePage() {
         <button
           onClick={() => router.push('/notification')}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="알림"
         >
           <svg
-            className="w-7 h-7 text-gray-700"
+            className="w-7 h-7 text-secondary"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -86,10 +87,10 @@ export default function HomePage() {
       </header>
 
       {/* 검색창 */}
-      <div className="px-5 mb-6">
-        <div className="flex items-center bg-[#f6f6f6] rounded-2xl h-11 px-3 shadow-sm">
+      <div className="px-6 mb-6">
+        <div className="flex items-center bg-surface rounded-2xl h-12 px-4 shadow-sm border border-transparent focus-within:border-primary transition-colors">
           <svg
-            className="w-5 h-5 text-gray-400"
+            className="w-5 h-5 text-tertiary"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -103,15 +104,15 @@ export default function HomePage() {
           </svg>
           <input
             type="text"
-            className="flex-1 bg-transparent px-3 text-base text-gray-800 placeholder-gray-400 outline-none"
+            className="flex-1 bg-transparent px-3 body text-primary placeholder:text-tertiary outline-none"
             placeholder="어떤 서비스를 찾으시나요?"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           {search.length > 0 && (
-            <button onClick={() => setSearch('')} className="p-1">
+            <button onClick={() => setSearch('')} className="p-1 hover:bg-gray-200 rounded-lg transition-colors">
               <svg
-                className="w-5 h-5 text-gray-400"
+                className="w-5 h-5 text-tertiary"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -129,14 +130,14 @@ export default function HomePage() {
       </div>
 
       {/* 서비스 카드 그리드 */}
-      <div className="mt-3 px-5">
+      <div className="mt-3 px-6">
         {search.length === 0 ? (
           // 전체 카드 그리드 (3x3)
-          <div className="grid grid-cols-3 gap-5 max-w-md mx-auto">
+          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
             {SERVICES.map((item) => (
               <button
                 key={item.key}
-                className="aspect-square bg-white rounded-2xl flex flex-col items-center justify-center shadow-md hover:shadow-lg transition-shadow active:scale-95"
+                className="aspect-square bg-white rounded-2xl flex flex-col items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 border border-transparent hover:border-primary/20"
                 onClick={() =>
                   router.push(
                     item.key === 'center' ? '/contact' : `/service/${item.key}`
@@ -151,7 +152,7 @@ export default function HomePage() {
                     className="object-contain"
                   />
                 </div>
-                <span className="text-[13px] text-gray-800 font-medium text-center leading-tight whitespace-pre-line px-2">
+                <span className="body-sm font-medium text-primary text-center leading-tight whitespace-pre-line px-2">
                   {item.label}
                 </span>
               </button>
@@ -160,15 +161,15 @@ export default function HomePage() {
         ) : filtered.length === 0 ? (
           // 검색 결과 없음
           <div className="flex items-center justify-center py-20">
-            <p className="text-gray-500 text-base">결과가 없습니다.</p>
+            <p className="body text-secondary">결과가 없습니다.</p>
           </div>
         ) : (
           // 검색 결과
-          <div className="grid grid-cols-3 gap-5 max-w-md mx-auto">
+          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
             {filtered.map((item) => (
               <button
                 key={item.key}
-                className="aspect-square bg-white rounded-2xl flex flex-col items-center justify-center shadow-md hover:shadow-lg transition-shadow active:scale-95"
+                className="aspect-square bg-white rounded-2xl flex flex-col items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 border border-transparent hover:border-primary/20"
                 onClick={() =>
                   router.push(
                     item.key === 'center' ? '/contact' : `/service/${item.key}`
@@ -183,7 +184,7 @@ export default function HomePage() {
                     className="object-contain"
                   />
                 </div>
-                <span className="text-[15px] text-gray-800 font-medium text-center leading-tight whitespace-pre-line px-2">
+                <span className="body-sm font-medium text-primary text-center leading-tight whitespace-pre-line px-2">
                   {item.label}
                 </span>
               </button>

@@ -48,7 +48,7 @@ export default function SignupPage() {
       // 1. 이미 가입된 전화번호인지 profiles에서 조회
       const { data: existUsers, error: existError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('phone')
         .eq('phone', internationalPhone)
 
       if (existError) {
