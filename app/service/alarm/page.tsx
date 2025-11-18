@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Loading } from '@/components/ui/Loading'
+import DateTimeSelector from '@/components/DateTimeSelector'
+import PaymentMethodSelector from '@/components/PaymentMethodSelector'
 
 const OPTIONS = [
   'LPG 경보기',
@@ -14,8 +16,12 @@ const OPTIONS = [
 ]
 
 export default function AlarmReplacePage() {
+  const [currentStep, setCurrentStep] = useState(1)
   const [selected, setSelected] = useState<number | null>(null)
   const [extra, setExtra] = useState('')
+  const [visitDate, setVisitDate] = useState('')
+  const [visitTime, setVisitTime] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('')
   const [loading, setLoading] = useState(false)
   const [authLoading, setAuthLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -33,6 +39,39 @@ export default function AlarmReplacePage() {
 
     checkAuth()
   }, [router])
+
+  const handleNextStep = () => {
+    if (currentStep === 1 && selected === null) {
+      alert('경보기 종류를 선택해주세요.')
+      return
+    }
+    if (currentStep === 2 && (!visitDate || !visitTime)) {
+      alert('방문 희망 날짜와 시간을 선택해주세요.')
+      return
+    }
+    if (currentStep === 3 && !paymentMethod) {
+      alert('결제 방법을 선택해주세요.')
+      return
+    }
+    setCurrentStep((prev) => prev + 1)
+  }
+
+  const handlePrevStep = () => {
+    setCurrentStep((prev) => prev - 1)
+  }
+
+  const getStepTitle = () => {
+    switch (currentStep) {
+      case 1:
+        return '경보기 교체'
+      case 2:
+        return '방문 날짜/시간 선택'
+      case 3:
+        return '결제 방법 선택'
+      default:
+        return '경보기 교체'
+    }
+  }
 
   const handleSubmit = async () => {
     if (selected === null) return
@@ -88,7 +127,7 @@ export default function AlarmReplacePage() {
       return
     }
 
-    const details = [
+    const requestDetails: any[] = [
       {
         request_id: request.id,
         key: '경보기 종류',
@@ -97,16 +136,46 @@ export default function AlarmReplacePage() {
     ]
 
     if (extra.trim()) {
-      details.push({
+      requestDetails.push({
         request_id: request.id,
         key: '추가 요청사항',
         value: extra,
       })
     }
 
+    // 방문 날짜/시간
+    if (visitDate && visitTime) {
+      requestDetails.push({
+        request_id: request.id,
+        key: '방문 희망 날짜',
+        value: visitDate,
+      })
+      requestDetails.push({
+        request_id: request.id,
+        key: '방문 희망 시간',
+        value: visitTime,
+      })
+    }
+
+    // 결제 방법
+    if (paymentMethod) {
+      const paymentMethodName = {
+        cash: '현금 결제',
+        card: '카드 결제',
+        transfer: '계좌 이체',
+        later: '추후 협의',
+      }[paymentMethod] || paymentMethod
+
+      requestDetails.push({
+        request_id: request.id,
+        key: '결제 방법',
+        value: paymentMethodName,
+      })
+    }
+
     const { error: detailError } = await supabase
       .from('request_details')
-      .insert(details)
+      .insert(requestDetails)
 
     setLoading(false)
 
@@ -125,7 +194,16 @@ export default function AlarmReplacePage() {
     <div className="min-h-screen bg-white pb-20">
       {/* 상단 헤더 */}
       <header className="pt-6 pb-2 px-5 flex items-center justify-between sticky top-0 bg-white z-10">
-        <button onClick={() => router.back()} className="p-2 -ml-2">
+        <button
+          onClick={() => {
+            if (currentStep > 1) {
+              handlePrevStep()
+            } else {
+              router.back()
+            }
+          }}
+          className="p-2 -ml-2"
+        >
           <svg
             className="w-7 h-7 text-gray-800"
             fill="none"
@@ -140,7 +218,7 @@ export default function AlarmReplacePage() {
             />
           </svg>
         </button>
-        <h1 className="text-[22px] font-bold text-gray-800">경보기 교체</h1>
+        <h1 className="text-[22px] font-bold text-gray-800">{getStepTitle()}</h1>
         <button
           onClick={() => router.push('/notification')}
           className="p-2 -mr-2"
@@ -161,53 +239,104 @@ export default function AlarmReplacePage() {
         </button>
       </header>
 
-      {/* 선택 옵션 */}
-      <div className="px-5 pt-6 pb-24">
-        {OPTIONS.map((opt, idx) => {
-          const isActive = selected === idx
-          return (
-            <button
-              key={opt}
-              onClick={() => setSelected(idx)}
-              className={`w-full flex items-center rounded-2xl px-4 py-5 mb-4 border transition-colors ${
-                isActive ? 'border-[#EB5A36]' : 'border-gray-200'
+      {/* 단계 표시 */}
+      <div className="px-5 py-4">
+        <div className="flex items-center justify-center gap-2">
+          {[1, 2, 3].map((step) => (
+            <div
+              key={step}
+              className={`h-2 flex-1 rounded-full transition-all ${
+                step <= currentStep ? 'bg-[#EB5A36]' : 'bg-gray-200'
               }`}
-            >
-              <div className="mr-3">
-                <div
-                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    isActive ? 'border-[#EB5A36]' : 'border-gray-300'
+            />
+          ))}
+        </div>
+        <p className="text-center text-sm text-gray-500 mt-2">
+          {currentStep}/3 단계
+        </p>
+      </div>
+
+      {/* 컨텐츠 */}
+      <div className="px-5 pb-24 pt-4">
+        {/* Step 1: 경보기 선택 */}
+        {currentStep === 1 && (
+          <>
+            {OPTIONS.map((opt, idx) => {
+              const isActive = selected === idx
+              return (
+                <button
+                  key={opt}
+                  onClick={() => setSelected(idx)}
+                  className={`w-full flex items-center rounded-2xl px-4 py-5 mb-4 border transition-colors ${
+                    isActive ? 'border-[#EB5A36]' : 'border-gray-200'
                   }`}
                 >
-                  {isActive && <div className="w-3.5 h-3.5 rounded-full bg-[#EB5A36]" />}
-                </div>
-              </div>
-              <span className="text-[17px] text-gray-800">{opt}</span>
-            </button>
-          )
-        })}
+                  <div className="mr-3">
+                    <div
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        isActive ? 'border-[#EB5A36]' : 'border-gray-300'
+                      }`}
+                    >
+                      {isActive && <div className="w-3.5 h-3.5 rounded-full bg-[#EB5A36]" />}
+                    </div>
+                  </div>
+                  <span className="text-[17px] text-gray-800">{opt}</span>
+                </button>
+              )
+            })}
 
-        {/* 추가 요청사항 */}
-        <div className="mt-2">
-          <textarea
-            className="w-full min-h-[120px] bg-[#F6F7FB] rounded-2xl px-4 py-4 text-[15px] text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-[#EB5A36]"
-            placeholder="추가 요청사항을 입력해주세요."
-            value={extra}
-            onChange={(e) => setExtra(e.target.value)}
+            {/* 추가 요청사항 */}
+            <div className="mt-2">
+              <textarea
+                className="w-full min-h-[120px] bg-[#F6F7FB] rounded-2xl px-4 py-4 text-[15px] text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-[#EB5A36]"
+                placeholder="추가 요청사항을 입력해주세요."
+                value={extra}
+                onChange={(e) => setExtra(e.target.value)}
+              />
+            </div>
+          </>
+        )}
+
+        {/* Step 2: 날짜/시간 선택 */}
+        {currentStep === 2 && (
+          <DateTimeSelector
+            onDateChange={setVisitDate}
+            onTimeChange={setVisitTime}
+            selectedDate={visitDate}
+            selectedTime={visitTime}
           />
-        </div>
+        )}
+
+        {/* Step 3: 결제 방법 선택 */}
+        {currentStep === 3 && (
+          <PaymentMethodSelector
+            onPaymentMethodChange={setPaymentMethod}
+            selectedMethod={paymentMethod}
+          />
+        )}
       </div>
 
       {/* 하단 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 py-6 bg-white border-t border-gray-200">
-        <Button
-          onClick={handleSubmit}
-          disabled={selected === null || loading}
-          fullWidth
-          className={selected === null ? 'bg-[#FADCD2] hover:bg-[#FADCD2]' : ''}
-        >
-          {loading ? '신청 중...' : '경보기 교체 신청'}
-        </Button>
+      <div className="fixed bottom-0 left-0 right-0 px-5 py-6 bg-white border-t border-gray-200 md:relative md:border-0">
+        {currentStep < 3 ? (
+          <Button
+            onClick={handleNextStep}
+            disabled={currentStep === 1 && selected === null}
+            fullWidth
+            className={currentStep === 1 && selected === null ? 'bg-[#FADCD2] hover:bg-[#FADCD2]' : ''}
+          >
+            다음
+          </Button>
+        ) : (
+          <Button
+            onClick={handleSubmit}
+            disabled={!paymentMethod || loading}
+            fullWidth
+            className={!paymentMethod ? 'bg-[#FADCD2] hover:bg-[#FADCD2]' : ''}
+          >
+            {loading ? '신청 중...' : '경보기 교체 신청'}
+          </Button>
+        )}
       </div>
 
       {/* 완료 모달 */}

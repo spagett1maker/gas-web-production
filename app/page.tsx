@@ -133,11 +133,11 @@ export default function HomePage() {
       <div className="mt-3 px-6">
         {search.length === 0 ? (
           // 전체 카드 그리드 (3x3)
-          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
+          <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
             {SERVICES.map((item) => (
               <button
                 key={item.key}
-                className="aspect-square bg-white rounded-2xl flex flex-col items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 border border-transparent hover:border-primary/20"
+                className="aspect-square bg-white rounded-xl flex flex-col items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 border border-transparent hover:border-primary/20"
                 onClick={() =>
                   router.push(
                     item.key === 'center' ? '/contact' : `/service/${item.key}`
@@ -152,7 +152,7 @@ export default function HomePage() {
                     className="object-contain"
                   />
                 </div>
-                <span className="body-sm font-medium text-primary text-center leading-tight whitespace-pre-line px-2">
+                <span className="body-sm font-medium text-primary text-center leading-1 whitespace-pre-line px-2">
                   {item.label}
                 </span>
               </button>
@@ -184,7 +184,7 @@ export default function HomePage() {
                     className="object-contain"
                   />
                 </div>
-                <span className="body-sm font-medium text-primary text-center leading-tight whitespace-pre-line px-2">
+                <span className="body-sm font-medium text-primary text-center leading-1 whitespace-pre-line px-2">
                   {item.label}
                 </span>
               </button>
