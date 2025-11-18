@@ -73,7 +73,7 @@ export const Modal = ({ isOpen, onClose, children, title, maxWidth = 'md' }: Mod
           )}
 
           {/* Content */}
-          <div className="px-6 py-5">
+          <div className="px-6 py-0">
             {children}
           </div>
         </div>

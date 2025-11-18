@@ -383,20 +383,20 @@ export default function ServiceDetailPage() {
       {/* 타임라인 모달 */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="요청 처리 기록">
         <div className="py-2">
-          <div className="flex justify-between items-center mb-6 pb-4 border-b border-[var(--color-border)]">
+          <div className="flex justify-between items-center mb-6 pb-2 border-b border-[var(--color-border)]">
             <p className="body-sm text-secondary">서비스 처리 ID</p>
             <p className="body font-bold text-primary">
               {request?.id?.slice(0, 4)}-{request?.id?.slice(-4)}
             </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-0">
             {stepList.map((step, idx) => {
               const isLast = idx === stepList.length - 1
               return (
                 <div key={idx} className="flex items-start">
                   {/* 날짜/시간 */}
-                  <div className="w-16 text-right mr-3">
+                  <div className="w-12 text-right mr-3">
                     <p className="body-sm font-medium text-primary">
                       {step.date}
                     </p>
