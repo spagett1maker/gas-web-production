@@ -63,8 +63,12 @@ export default function ServiceDetailPage() {
       }
 
       if (data) {
+        // 배열을 단일 객체로 변환
+        const storesData = Array.isArray(data.stores) ? data.stores[0] : data.stores
+        const servicesData = Array.isArray(data.services) ? data.services[0] : data.services
+
         // stores의 user_id로 profiles 정보 가져오기
-        const userId = (data.stores as any)?.user_id
+        const userId = storesData?.user_id
         let profileData = null
 
         if (userId) {
@@ -83,6 +87,8 @@ export default function ServiceDetailPage() {
 
         setRequest({
           ...data,
+          stores: storesData,
+          services: servicesData,
           user_id: userId,
           profiles: profileData
         } as ServiceRequest)

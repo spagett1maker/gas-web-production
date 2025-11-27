@@ -114,7 +114,13 @@ function StoresPageContent() {
       .eq('store_id', store.id)
       .order('created_at', { ascending: false })
 
-    setStoreRequests(data as ServiceRequest[] || [])
+    // 배열을 단일 객체로 변환
+    const enrichedRequests = (data || []).map(request => ({
+      ...request,
+      services: Array.isArray(request.services) ? request.services[0] : request.services,
+    }))
+
+    setStoreRequests(enrichedRequests as ServiceRequest[])
     setShowDetailModal(true)
   }
 

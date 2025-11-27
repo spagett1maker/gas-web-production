@@ -113,7 +113,14 @@ function UsersPageContent() {
         .in('store_id', storeIds)
         .order('created_at', { ascending: false })
 
-      setUserRequests(requestsData as ServiceRequest[] || [])
+      // 배열을 단일 객체로 변환
+      const enrichedRequests = (requestsData || []).map(request => ({
+        ...request,
+        services: Array.isArray(request.services) ? request.services[0] : request.services,
+        stores: Array.isArray(request.stores) ? request.stores[0] : request.stores,
+      }))
+
+      setUserRequests(enrichedRequests as ServiceRequest[])
     } else {
       setUserRequests([])
     }

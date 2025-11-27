@@ -73,6 +73,8 @@ function ServicesPageContent() {
 
         const enrichedData = data.map(request => ({
           ...request,
+          stores: Array.isArray(request.stores) ? request.stores[0] : request.stores,
+          services: Array.isArray(request.services) ? request.services[0] : request.services,
           profiles: profilesMap.get(request.user_id)
         }))
 
