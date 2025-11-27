@@ -60,3 +60,6 @@ export const CardFooter = ({ children, className = '' }: CardFooterProps) => {
     </div>
   )
 }
+
+// CardContent alias for CardBody (for compatibility with gas-dashboard style)
+export const CardContent = CardBody

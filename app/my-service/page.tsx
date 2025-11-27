@@ -13,38 +13,26 @@ const STATUS_CONFIG = {
   '요청됨': {
     color: '#3B82F6', // info color
     bg: '#EFF6FF',
-    icon: (
-      <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 512 512">
-        <path d="M272,464a16,16,0,0,1-16-16.42V264.13a8,8,0,0,0-8-8H64.41a16.31,16.31,0,0,1-15.49-10.65,16,16,0,0,1,8.41-19.87l384-176.15a16,16,0,0,1,21.22,21.19l-176,384A16,16,0,0,1,272,464Z"/>
-      </svg>
-    )
+    borderColor: '#93C5FD',
+    text: '요청됨'
   },
   '진행중': {
     color: '#F59E0B', // warning color
     bg: '#FEF3C7',
-    icon: (
-      <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
-      </svg>
-    )
+    borderColor: '#FCD34D',
+    text: '진행중'
   },
   '완료': {
     color: '#10B981', // success color
     bg: '#D1FAE5',
-    icon: (
-      <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-      </svg>
-    )
+    borderColor: '#6EE7B7',
+    text: '완료'
   },
   '취소': {
     color: '#EF4444', // error color
     bg: '#FEE2E2',
-    icon: (
-      <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/>
-      </svg>
-    )
+    borderColor: '#FCA5A5',
+    text: '취소'
   },
 }
 
@@ -203,10 +191,14 @@ export default function MyServicePage() {
                         {SERVICE_NAME_MAP[service.services.name] || service.services.name}
                       </span>
                       <div
-                        className="flex items-center justify-center"
-                        style={{ color: statusConfig?.color }}
+                        className="px-3 py-1.5 rounded-full border-2 font-semibold text-sm"
+                        style={{
+                          color: statusConfig?.color,
+                          backgroundColor: statusConfig?.bg,
+                          borderColor: statusConfig?.borderColor
+                        }}
                       >
-                        {statusConfig?.icon}
+                        {statusConfig?.text}
                       </div>
                     </button>
                   )

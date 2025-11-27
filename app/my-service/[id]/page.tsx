@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase'
 import { SERVICE_NAME_MAP } from '@/lib/constants'
 import { Loading } from '@/components/ui/Loading'
 import { Modal } from '@/components/ui/Modal'
+import { Toast } from '@/components/ui/Toast'
+import DateTimeSelector from '@/components/DateTimeSelector'
 
 // 가격 정보 (가격이 있는 서비스만)
 const PRICE_MAP: Record<string, number> = {
@@ -20,6 +22,22 @@ const PRICE_MAP: Record<string, number> = {
   '공기조절기 교체': 15000,
   '배관 철거': 15000,
   '가스누출점검(기본출장비)': 30000,
+}
+
+// 서비스별 품목 정의
+const SERVICE_ITEMS: Record<string, Array<{ name: string, price: number, image: string }>> = {
+  burner: [
+    { name: '(일반화구) 1열 1구', price: 19000, image: '/images/burner/1.png' },
+    { name: '(일반화구) 2열 2구', price: 33000, image: '/images/burner/2.png' },
+    { name: '(일반화구) 3열 3구', price: 75000, image: '/images/burner/3.png' },
+    { name: '(시그마버너) 1열 1구', price: 27000, image: '/images/burner/4.png' },
+    { name: '(시그마버너) 2열 2구', price: 40000, image: '/images/burner/5.png' },
+    { name: '(시그마버너) 3열 3구', price: 140000, image: '/images/burner/6.jpg' },
+  ],
+  valve: [
+    { name: '8미리 밸브교체', price: 15000, image: '/images/valve/1.jpg' },
+    { name: '공기조절기 교체', price: 15000, image: '/images/valve/air.png' },
+  ],
 }
 
 // 서비스별 이미지 맵핑
@@ -71,6 +89,17 @@ export default function ServiceDetailPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedDetails, setEditedDetails] = useState<any[]>([])
+  const [editedDate, setEditedDate] = useState('')
+  const [editedTime, setEditedTime] = useState('')
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' as 'success' | 'error' })
+  const [editedItemCounts, setEditedItemCounts] = useState<Record<string, number>>({})
+  const [editedExtraRequest, setEditedExtraRequest] = useState('')
+  const [editedAlarmType, setEditedAlarmType] = useState('')
+  const [editedQuoteType, setEditedQuoteType] = useState('')
+  const [editedPipeType, setEditedPipeType] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -161,19 +190,21 @@ export default function ServiceDetailPage() {
     STATUS_CONFIG['요청됨']
 
   // 전체 가격 계산
-  const total = details.reduce((sum, d) => {
-    const key = d.key || ''
-
-    // 가격이 없는 필드들은 제외
-    const nonPriceFields = ['추가 요청사항', '경보기 종류', '시공 종류']
-    if (nonPriceFields.includes(key)) {
-      return sum
-    }
-
-    const count = parseInt(d.value.replace(/[^0-9]/g, '')) || 1
-    const unitPrice = PRICE_MAP[key] ?? 0
-    return sum + count * unitPrice
-  }, 0)
+  const total = isEditing
+    ? Object.entries(editedItemCounts).reduce((sum, [itemName, count]) => {
+        const unitPrice = PRICE_MAP[itemName] ?? 0
+        return sum + count * unitPrice
+      }, 0)
+    : details.reduce((sum, d) => {
+        const key = d.key || ''
+        const nonPriceFields = ['추가 요청사항', '경보기 종류', '시공 종류', '방문 희망 날짜', '방문 희망 시간', '결제 방법']
+        if (nonPriceFields.includes(key)) {
+          return sum
+        }
+        const count = parseInt(d.value.replace(/[^0-9]/g, '')) || 1
+        const unitPrice = PRICE_MAP[key] ?? 0
+        return sum + count * unitPrice
+      }, 0)
 
   const getStatusTime = () => {
     if (!request) return ''
@@ -207,6 +238,217 @@ export default function ServiceDetailPage() {
   const getItemImage = (key: string) => {
     const serviceName = service?.name || ''
     return SERVICE_IMAGES[serviceName]?.[key] || null
+  }
+
+  // 편집 모드 시작
+  const startEditing = () => {
+    setEditedDetails([...details])
+    const dateDetail = details.find((d) => d.key === '방문 희망 날짜')
+    const timeDetail = details.find((d) => d.key === '방문 희망 시간')
+    const extraDetail = details.find((d) => d.key === '추가 요청사항')
+    const alarmDetail = details.find((d) => d.key === '경보기 종류')
+    const quoteDetail = details.find((d) => d.key === '시공 종류')
+    const pipeDetail = details.find((d) => d.key === '가스 종류')
+
+    setEditedDate(dateDetail?.value || '')
+    setEditedTime(timeDetail?.value || '')
+    setEditedExtraRequest(extraDetail?.value || '')
+    setEditedAlarmType(alarmDetail?.value || '')
+    setEditedQuoteType(quoteDetail?.value || '')
+    setEditedPipeType(pipeDetail?.value || '')
+
+    // 현재 선택된 품목들의 수량 초기화
+    const counts: Record<string, number> = {}
+    details
+      .filter((d) => !['방문 희망 날짜', '방문 희망 시간', '결제 방법', '추가 요청사항', '경보기 종류', '시공 종류', '가스 종류'].includes(d.key))
+      .forEach((d) => {
+        const count = parseInt(d.value.replace(/[^0-9]/g, '')) || 1
+        counts[d.key] = count
+      })
+    setEditedItemCounts(counts)
+    setIsEditing(true)
+  }
+
+  // 편집 취소
+  const cancelEditing = () => {
+    setIsEditing(false)
+    setEditedDetails([])
+    setEditedDate('')
+    setEditedTime('')
+    setEditedItemCounts({})
+    setEditedExtraRequest('')
+    setEditedAlarmType('')
+    setEditedQuoteType('')
+    setEditedPipeType('')
+  }
+
+  // 품목 수량 변경
+  const handleItemCount = (itemName: string, diff: number) => {
+    setEditedItemCounts((prev) => {
+      const newCount = Math.max(0, (prev[itemName] || 0) + diff)
+      if (newCount === 0) {
+        const { [itemName]: _, ...rest } = prev
+        return rest
+      }
+      return { ...prev, [itemName]: newCount }
+    })
+  }
+
+  // 변경사항 저장
+  const saveChanges = async () => {
+    try {
+      // 품목이 있는 서비스의 경우 최소 1개 이상 선택 확인
+      const serviceName = service?.name || ''
+      const availableItems = SERVICE_ITEMS[serviceName] || []
+      if (availableItems.length > 0) {
+        const hasSelectedItems = Object.values(editedItemCounts).some(count => count > 0)
+        if (!hasSelectedItems) {
+          setToast({ show: true, message: '최소 1개 이상의 품목을 선택해주세요.', type: 'error' })
+          return
+        }
+      }
+
+      // 날짜/시간 확인
+      if (!editedDate || !editedTime) {
+        setToast({ show: true, message: '방문 날짜와 시간을 선택해주세요.', type: 'error' })
+        return
+      }
+
+      // 1. 날짜/시간 업데이트
+      const dateDetail = details.find((d) => d.key === '방문 희망 날짜')
+      const timeDetail = details.find((d) => d.key === '방문 희망 시간')
+
+      if (dateDetail) {
+        await supabase
+          .from('request_details')
+          .update({ value: editedDate })
+          .eq('request_id', params.id)
+          .eq('key', '방문 희망 날짜')
+      }
+
+      if (timeDetail) {
+        await supabase
+          .from('request_details')
+          .update({ value: editedTime })
+          .eq('request_id', params.id)
+          .eq('key', '방문 희망 시간')
+      }
+
+      // 2. 기존 품목들 모두 삭제
+      const itemKeysToDelete = details
+        .filter((d) => !['방문 희망 날짜', '방문 희망 시간', '결제 방법', '추가 요청사항', '경보기 종류', '시공 종류', '가스 종류'].includes(d.key))
+        .map((d) => d.key)
+
+      if (itemKeysToDelete.length > 0) {
+        await supabase
+          .from('request_details')
+          .delete()
+          .eq('request_id', params.id)
+          .in('key', itemKeysToDelete)
+      }
+
+      // 3. 새로 선택된 품목들 추가
+      const newItems = Object.entries(editedItemCounts)
+        .filter(([_, count]) => count > 0)
+        .map(([itemName, count]) => ({
+          request_id: params.id,
+          key: itemName,
+          value: `${count}개`
+        }))
+
+      if (newItems.length > 0) {
+        await supabase
+          .from('request_details')
+          .insert(newItems)
+      }
+
+      // 4. 추가 요청사항 업데이트 (있는 경우)
+      const extraDetail = details.find((d) => d.key === '추가 요청사항')
+      if (extraDetail) {
+        await supabase
+          .from('request_details')
+          .update({ value: editedExtraRequest })
+          .eq('request_id', params.id)
+          .eq('key', '추가 요청사항')
+      }
+
+      // 5. 경보기 종류 업데이트 (있는 경우)
+      const alarmDetail = details.find((d) => d.key === '경보기 종류')
+      if (alarmDetail && editedAlarmType) {
+        await supabase
+          .from('request_details')
+          .update({ value: editedAlarmType })
+          .eq('request_id', params.id)
+          .eq('key', '경보기 종류')
+      }
+
+      // 6. 시공 종류 업데이트 (있는 경우)
+      const quoteDetail = details.find((d) => d.key === '시공 종류')
+      if (quoteDetail && editedQuoteType) {
+        await supabase
+          .from('request_details')
+          .update({ value: editedQuoteType })
+          .eq('request_id', params.id)
+          .eq('key', '시공 종류')
+      }
+
+      // 7. 가스 종류 업데이트 (있는 경우)
+      const pipeDetail = details.find((d) => d.key === '가스 종류')
+      if (pipeDetail && editedPipeType) {
+        await supabase
+          .from('request_details')
+          .update({ value: editedPipeType })
+          .eq('request_id', params.id)
+          .eq('key', '가스 종류')
+      }
+
+      // 데이터 다시 불러오기
+      const { data: detailData } = await supabase
+        .from('request_details')
+        .select('key, value')
+        .eq('request_id', params.id)
+
+      setDetails(detailData || [])
+      setIsEditing(false)
+      setEditedItemCounts({})
+      setEditedExtraRequest('')
+      setEditedAlarmType('')
+      setEditedQuoteType('')
+      setEditedPipeType('')
+      setToast({ show: true, message: '변경사항이 저장되었습니다.', type: 'success' })
+    } catch (error) {
+      console.error('저장 실패:', error)
+      setToast({ show: true, message: '저장에 실패했습니다.', type: 'error' })
+    }
+  }
+
+  // 주문 취소
+  const cancelOrder = async () => {
+    try {
+      const { error } = await supabase
+        .from('service_requests')
+        .update({
+          status: '취소',
+          canceled_at: new Date().toISOString()
+        })
+        .eq('id', params.id)
+
+      if (error) throw error
+
+      // 요청 데이터 다시 불러오기
+      const { data: requestData } = await supabase
+        .from('service_requests')
+        .select('*, services(name)')
+        .eq('id', params.id)
+        .single()
+
+      setRequest(requestData)
+      setShowCancelModal(false)
+      setToast({ show: true, message: '주문이 취소되었습니다.', type: 'success' })
+    } catch (error) {
+      console.error('취소 실패:', error)
+      setToast({ show: true, message: '취소에 실패했습니다.', type: 'error' })
+    }
   }
 
   return (
@@ -329,46 +571,193 @@ export default function ServiceDetailPage() {
           <p className="heading-3 text-primary mb-4">
             {SERVICE_NAME_MAP[service?.name] || service?.name || '서비스'}
           </p>
-          <div className="space-y-3 mb-4">
-            {details
-              .filter((item) => !['방문 희망 날짜', '방문 희망 시간', '결제 방법'].includes(item.key))
-              .map((item, idx) => {
-                const itemImage = getItemImage(item.key)
-                const isExtraRequest = item.key === '추가 요청사항'
-                const isSelectionField = ['경보기 종류', '시공 종류'].includes(item.key)
 
-                return (
-                  <div key={idx} className="flex items-center justify-between">
-                    <div className="flex items-center flex-1">
-                      {itemImage && (
-                        <div className="w-12 h-12 bg-surface rounded-lg mr-3 flex-shrink-0 relative overflow-hidden">
-                          <Image
-                            src={itemImage}
-                            alt={item.key}
-                            fill
-                            className="object-contain p-1"
+          {isEditing ? (
+            // 편집 모드: 모든 가능한 품목 표시
+            <div className="space-y-3 mb-4">
+              {(() => {
+                const serviceName = service?.name || ''
+                const availableItems = SERVICE_ITEMS[serviceName] || []
+
+                if (availableItems.length > 0) {
+                  const extraDetail = details.find((d) => d.key === '추가 요청사항')
+
+                  // 안내 문구
+                  return (
+                    <>
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3">
+                        <p className="body-sm text-blue-800">
+                          ✏️ 품목을 새로 선택하세요. 기존 품목은 초기화되고 선택한 품목만 저장됩니다.
+                        </p>
+                      </div>
+                      {availableItems.map((item) => {
+                        const count = editedItemCounts[item.name] || 0
+
+                        return (
+                          <div key={item.name} className="flex items-center justify-between p-3 rounded-xl bg-surface border border-[var(--color-border)]">
+                            <div className="flex items-center flex-1">
+                              <div className="w-12 h-12 bg-white rounded-lg mr-3 flex-shrink-0 relative overflow-hidden">
+                                <Image src={item.image} alt={item.name} fill className="object-contain p-1" />
+                              </div>
+                              <div className="flex-1">
+                                <span className="body text-primary font-medium">{item.name}</span>
+                                <p className="body-sm text-secondary">{item.price.toLocaleString()}원</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleItemCount(item.name, -1)}
+                                className="w-8 h-8 rounded-full bg-white border border-[var(--color-border)] flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-30"
+                                disabled={count === 0}
+                              >
+                                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                                </svg>
+                              </button>
+                              <span className="bg-primary-light rounded-full px-3 py-1 text-primary caption font-bold min-w-[50px] text-center">
+                                {count}개
+                              </span>
+                              <button
+                                onClick={() => handleItemCount(item.name, 1)}
+                                className="w-8 h-8 rounded-full bg-white border border-[var(--color-border)] flex items-center justify-center hover:bg-gray-200 transition-colors"
+                              >
+                                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })}
+
+                      {/* 추가 요청사항 (품목이 있는 서비스) */}
+                      {extraDetail && (
+                        <div className="mt-4 space-y-2">
+                          <label className="body text-secondary font-semibold">추가 요청사항</label>
+                          <textarea
+                            value={editedExtraRequest}
+                            onChange={(e) => setEditedExtraRequest(e.target.value)}
+                            className="w-full border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm text-primary bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[80px]"
+                            placeholder="추가 요청사항을 입력하세요"
                           />
                         </div>
                       )}
-                      <div className="flex-1">
-                        <span className="body text-secondary">{item.key}</span>
-                        {isExtraRequest && (
-                          <p className="body-sm text-tertiary mt-1">{item.value}</p>
+                    </>
+                  )
+                }
+
+                if (availableItems.length === 0) {
+                  // 품목이 없는 서비스 (경보기, 가스누출검사 등)
+                  return details
+                    .filter((item) => !['방문 희망 날짜', '방문 희망 시간', '결제 방법'].includes(item.key))
+                    .map((item, idx) => {
+                      const itemImage = getItemImage(item.key)
+                      const isExtraRequest = item.key === '추가 요청사항'
+                      const isAlarmType = item.key === '경보기 종류'
+                      const isQuoteType = item.key === '시공 종류'
+                      const isPipeType = item.key === '가스 종류'
+
+                      return (
+                        <div key={idx} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center flex-1">
+                              {itemImage && (
+                                <div className="w-12 h-12 bg-surface rounded-lg mr-3 flex-shrink-0 relative overflow-hidden">
+                                  <Image src={itemImage} alt={item.key} fill className="object-contain p-1" />
+                                </div>
+                              )}
+                              <div className="flex-1">
+                                <span className="body text-secondary font-semibold">{item.key}</span>
+
+                                {/* 추가 요청사항 편집 */}
+                                {isExtraRequest && (
+                                  <textarea
+                                    value={editedExtraRequest}
+                                    onChange={(e) => setEditedExtraRequest(e.target.value)}
+                                    className="w-full mt-2 border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm text-primary bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[80px]"
+                                    placeholder="추가 요청사항을 입력하세요"
+                                  />
+                                )}
+
+                                {/* 경보기 종류 편집 */}
+                                {isAlarmType && (
+                                  <select
+                                    value={editedAlarmType}
+                                    onChange={(e) => setEditedAlarmType(e.target.value)}
+                                    className="w-full mt-2 border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm text-primary bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                  >
+                                    <option value="LPG 경보기">LPG 경보기</option>
+                                    <option value="LNG(도시가스) 경보기">LNG(도시가스) 경보기</option>
+                                    <option value="그 외">그 외</option>
+                                  </select>
+                                )}
+
+                                {/* 시공 종류 편집 */}
+                                {isQuoteType && (
+                                  <select
+                                    value={editedQuoteType}
+                                    onChange={(e) => setEditedQuoteType(e.target.value)}
+                                    className="w-full mt-2 border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm text-primary bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                  >
+                                    <option value="LPG">LPG</option>
+                                    <option value="LNG">LNG</option>
+                                  </select>
+                                )}
+
+                                {/* 가스 종류 편집 (배관 철거) */}
+                                {isPipeType && (
+                                  <select
+                                    value={editedPipeType}
+                                    onChange={(e) => setEditedPipeType(e.target.value)}
+                                    className="w-full mt-2 border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm text-primary bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                  >
+                                    <option value="LPG">LPG</option>
+                                    <option value="LNG(도시가스)">LNG(도시가스)</option>
+                                  </select>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })
+                }
+              })()}
+            </div>
+          ) : (
+            // 보기 모드: 선택된 품목만 표시
+            <div className="space-y-3 mb-4">
+              {details
+                .filter((item) => !['방문 희망 날짜', '방문 희망 시간', '결제 방법'].includes(item.key))
+                .map((item, idx) => {
+                  const itemImage = getItemImage(item.key)
+                  const isExtraRequest = item.key === '추가 요청사항'
+                  const isSelectionField = ['경보기 종류', '시공 종류'].includes(item.key)
+
+                  return (
+                    <div key={idx} className="flex items-center justify-between">
+                      <div className="flex items-center flex-1">
+                        {itemImage && (
+                          <div className="w-12 h-12 bg-surface rounded-lg mr-3 flex-shrink-0 relative overflow-hidden">
+                            <Image src={itemImage} alt={item.key} fill className="object-contain p-1" />
+                          </div>
                         )}
-                        {isSelectionField && (
-                          <p className="body-sm font-medium text-primary mt-1">{item.value}</p>
-                        )}
+                        <div className="flex-1">
+                          <span className="body text-secondary">{item.key}</span>
+                          {isExtraRequest && <p className="body-sm text-tertiary mt-1">{item.value}</p>}
+                          {isSelectionField && <p className="body-sm font-medium text-primary mt-1">{item.value}</p>}
+                        </div>
                       </div>
+                      {!isExtraRequest && !isSelectionField && (
+                        <span className="bg-primary-light rounded-full px-3 py-1 text-primary caption font-bold ml-2">
+                          {item.value}
+                        </span>
+                      )}
                     </div>
-                    {!isExtraRequest && !isSelectionField && (
-                      <span className="bg-primary-light rounded-full px-3 py-1 text-primary caption font-bold ml-2">
-                        {item.value}
-                      </span>
-                    )}
-                  </div>
-                )
-              })}
-          </div>
+                  )
+                })}
+            </div>
+          )}
         </div>
 
         {/* 방문 정보 */}
@@ -391,20 +780,29 @@ export default function ServiceDetailPage() {
               </svg>
               <p className="body font-bold text-primary">방문 일정</p>
             </div>
-            <div className="space-y-2">
-              {details
-                .filter((d) =>
-                  ['방문 희망 날짜', '방문 희망 시간'].includes(d.key)
-                )
-                .map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between">
-                    <span className="body-sm text-secondary">{item.key}</span>
-                    <span className="body-sm font-semibold text-primary">
-                      {item.value}
-                    </span>
-                  </div>
-                ))}
-            </div>
+            {isEditing ? (
+              <DateTimeSelector
+                selectedDate={editedDate}
+                selectedTime={editedTime}
+                onDateChange={setEditedDate}
+                onTimeChange={setEditedTime}
+              />
+            ) : (
+              <div className="space-y-2">
+                {details
+                  .filter((d) =>
+                    ['방문 희망 날짜', '방문 희망 시간'].includes(d.key)
+                  )
+                  .map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between">
+                      <span className="body-sm text-secondary">{item.key}</span>
+                      <span className="body-sm font-semibold text-primary">
+                        {item.value}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -440,6 +838,42 @@ export default function ServiceDetailPage() {
             <p className="heading-3 text-primary">
               {total.toLocaleString()}원
             </p>
+          </div>
+        )}
+
+        {/* 수정/취소 버튼 (요청됨 상태일 때만 표시) */}
+        {request?.status === '요청됨' && !isEditing && (
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowCancelModal(true)}
+              className="flex-1 bg-white border-2 border-[var(--color-border)] text-secondary font-semibold py-3 rounded-2xl hover:bg-gray-50 transition-colors"
+            >
+              주문 취소
+            </button>
+            <button
+              onClick={startEditing}
+              className="flex-1 bg-primary text-white font-semibold py-3 rounded-2xl hover:bg-[var(--color-primary-hover)] transition-colors"
+            >
+              수정하기
+            </button>
+          </div>
+        )}
+
+        {/* 편집 모드 저장/취소 버튼 */}
+        {isEditing && (
+          <div className="flex gap-3">
+            <button
+              onClick={cancelEditing}
+              className="flex-1 bg-white border-2 border-[var(--color-border)] text-secondary font-semibold py-3 rounded-2xl hover:bg-gray-50 transition-colors"
+            >
+              취소
+            </button>
+            <button
+              onClick={saveChanges}
+              className="flex-1 bg-primary text-white font-semibold py-3 rounded-2xl hover:bg-[var(--color-primary-hover)] transition-colors"
+            >
+              저장하기
+            </button>
           </div>
         )}
       </div>
@@ -493,6 +927,38 @@ export default function ServiceDetailPage() {
           </div>
         </div>
       </Modal>
+
+      {/* 주문 취소 확인 모달 */}
+      <Modal isOpen={showCancelModal} onClose={() => setShowCancelModal(false)} title="주문 취소">
+        <div className="py-2">
+          <p className="body text-secondary mb-6">
+            정말로 이 주문을 취소하시겠습니까? 취소 후에는 되돌릴 수 없습니다.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowCancelModal(false)}
+              className="flex-1 bg-white border-2 border-[var(--color-border)] text-secondary font-semibold py-3 rounded-2xl hover:bg-gray-50 transition-colors"
+            >
+              아니오
+            </button>
+            <button
+              onClick={cancelOrder}
+              className="flex-1 bg-red-500 text-white font-semibold py-3 rounded-2xl hover:bg-red-600 transition-colors"
+            >
+              예, 취소합니다
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Toast 메시지 */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </div>
   )
 }
