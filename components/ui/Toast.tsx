@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react'
 
 interface ToastProps {
-  title: string
+  title?: string
   message: string
-  type?: 'service' | 'inquiry' | 'system' | 'default'
+  type?: 'service' | 'inquiry' | 'system' | 'default' | 'success' | 'error'
   duration?: number
   onClose: () => void
 }
@@ -18,8 +18,23 @@ const getTypeIcon = (type: string) => {
       return '💬'
     case 'system':
       return '⚙️'
+    case 'success':
+      return '✅'
+    case 'error':
+      return '❌'
     default:
       return '📌'
+  }
+}
+
+const getTypeColor = (type: string) => {
+  switch (type) {
+    case 'success':
+      return 'border-green-200 bg-green-50'
+    case 'error':
+      return 'border-red-200 bg-red-50'
+    default:
+      return 'border-gray-200 bg-white'
   }
 }
 
@@ -47,7 +62,9 @@ export function Toast({ title, message, type = 'default', duration = 5000, onClo
 
   return (
     <div
-      className={`fixed top-4 right-4 max-w-sm w-full bg-white rounded-xl shadow-lg border border-gray-200 p-4 z-50 transition-all duration-300 ${
+      className={`fixed top-4 right-4 max-w-sm w-full rounded-xl shadow-lg border p-4 z-50 transition-all duration-300 ${
+        getTypeColor(type)
+      } ${
         isExiting ? 'opacity-0 translate-x-full' : 'opacity-100 translate-x-0'
       }`}
       onClick={handleClose}
@@ -55,7 +72,7 @@ export function Toast({ title, message, type = 'default', duration = 5000, onClo
       <div className="flex items-start">
         <div className="text-2xl mr-3 flex-shrink-0">{getTypeIcon(type)}</div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-[15px] font-bold text-gray-800 mb-1 truncate">{title}</h3>
+          {title && <h3 className="text-[15px] font-bold text-gray-800 mb-1 truncate">{title}</h3>}
           <p className="text-[13px] text-gray-600 line-clamp-2">{message}</p>
         </div>
         <button
@@ -87,9 +104,9 @@ export function Toast({ title, message, type = 'default', duration = 5000, onClo
 interface ToastContainerProps {
   toasts: Array<{
     id: string
-    title: string
+    title?: string
     message: string
-    type?: 'service' | 'inquiry' | 'system' | 'default'
+    type?: 'service' | 'inquiry' | 'system' | 'default' | 'success' | 'error'
   }>
   onRemove: (id: string) => void
 }
