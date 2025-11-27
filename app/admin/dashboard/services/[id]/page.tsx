@@ -259,29 +259,154 @@ export default function ServiceDetailPage() {
               </CardContent>
             </Card>
 
-            {/* 요청 상세 */}
-            <Card>
-              <CardHeader>
-                <h2 className="text-lg font-semibold text-gray-900">요청 상세</h2>
-              </CardHeader>
-              <CardContent>
-                {requestDetails.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-4">상세 정보가 없습니다.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {requestDetails.map((detail, idx) => (
-                      <div key={idx} className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
-                        <FileText className="h-4 w-4 text-gray-400 mt-0.5" />
-                        <div className="flex-1">
-                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{detail.key}</p>
-                          <p className="text-sm text-gray-900 mt-1">{detail.value}</p>
-                        </div>
+            {/* 방문 일정 - 강조 */}
+            {(() => {
+              const dateDetail = requestDetails.find(d => d.key === '방문 희망 날짜')
+              const timeDetail = requestDetails.find(d => d.key === '방문 희망 시간')
+
+              if (dateDetail || timeDetail) {
+                return (
+                  <Card className="border-2 border-orange-200 bg-orange-50">
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-orange-600" />
+                        <h2 className="text-lg font-semibold text-orange-900">방문 예정 일정</h2>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {dateDetail && (
+                          <div className="flex items-center justify-between bg-white rounded-lg p-3">
+                            <span className="text-sm font-medium text-gray-600">날짜</span>
+                            <span className="text-base font-bold text-gray-900">{dateDetail.value}</span>
+                          </div>
+                        )}
+                        {timeDetail && (
+                          <div className="flex items-center justify-between bg-white rounded-lg p-3">
+                            <span className="text-sm font-medium text-gray-600">시간</span>
+                            <span className="text-base font-bold text-gray-900">{timeDetail.value}</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              }
+              return null
+            })()}
+
+            {/* 요청 품목 */}
+            {(() => {
+              const items = requestDetails.filter(d =>
+                !['방문 희망 날짜', '방문 희망 시간', '추가 요청사항', '결제 방법', '경보기 종류', '시공 종류', '가스 종류'].includes(d.key)
+              )
+
+              if (items.length > 0) {
+                return (
+                  <Card>
+                    <CardHeader>
+                      <h2 className="text-lg font-semibold text-gray-900">요청 품목</h2>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {items.map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span className="text-sm font-medium text-gray-900">{item.key}</span>
+                            </div>
+                            <span className="text-sm font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                              {item.value}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              }
+              return null
+            })()}
+
+            {/* 서비스 옵션 */}
+            {(() => {
+              const options = requestDetails.filter(d =>
+                ['경보기 종류', '시공 종류', '가스 종류'].includes(d.key)
+              )
+
+              if (options.length > 0) {
+                return (
+                  <Card>
+                    <CardHeader>
+                      <h2 className="text-lg font-semibold text-gray-900">서비스 옵션</h2>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {options.map((option, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
+                            <span className="text-sm font-medium text-gray-600">{option.key}</span>
+                            <span className="text-sm font-bold text-purple-700">{option.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              }
+              return null
+            })()}
+
+            {/* 추가 요청사항 */}
+            {(() => {
+              const extraRequest = requestDetails.find(d => d.key === '추가 요청사항')
+
+              if (extraRequest && extraRequest.value) {
+                return (
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-gray-600" />
+                        <h2 className="text-lg font-semibold text-gray-900">추가 요청사항</h2>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                          {extraRequest.value}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              }
+              return null
+            })()}
+
+            {/* 결제 방법 */}
+            {(() => {
+              const payment = requestDetails.find(d => d.key === '결제 방법')
+
+              if (payment) {
+                return (
+                  <Card>
+                    <CardHeader>
+                      <h2 className="text-lg font-semibold text-gray-900">결제 방법</h2>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div className="bg-green-500 p-2 rounded-lg">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                          </svg>
+                        </div>
+                        <span className="text-base font-bold text-green-900">{payment.value}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              }
+              return null
+            })()}
           </div>
 
           {/* 오른쪽 컬럼 - 고객 정보 & 상태 변경 */}

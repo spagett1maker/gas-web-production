@@ -17,16 +17,18 @@ import {
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { ADMIN_USER_ID } from '@/lib/constants'
+import { useNotifications } from '@/hooks/useNotifications'
+import { NotificationBanner, NotificationStatus } from './NotificationBanner'
 
 interface AdminLayoutProps {
   children: React.ReactNode
 }
 
 const navigation = [
-  { name: '대시보드', href: '/admin/dashboard-new', icon: Home },
-  { name: '서비스 관리', href: '/admin/dashboard-new/services', icon: Wrench },
-  { name: '가게 관리', href: '/admin/dashboard-new/stores', icon: Store },
-  { name: '사용자 관리', href: '/admin/dashboard-new/users', icon: Users },
+  { name: '대시보드', href: '/admin/dashboard', icon: Home },
+  { name: '서비스 관리', href: '/admin/dashboard/services', icon: Wrench },
+  { name: '가게 관리', href: '/admin/dashboard/stores', icon: Store },
+  { name: '사용자 관리', href: '/admin/dashboard/users', icon: Users },
 ]
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -35,6 +37,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [loading, setLoading] = useState(true)
   const pathname = usePathname()
   const router = useRouter()
+
+  // 알림 시스템
+  const {
+    isSupported,
+    permission,
+    requestPermission,
+    showNotification,
+    listenToServiceRequests,
+  } = useNotifications()
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -51,6 +62,37 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
     checkAuth()
   }, [router])
+
+  // 새 서비스 요청 리스닝
+  useEffect(() => {
+    if (permission !== 'granted' || !user) return
+
+    const unsubscribe = listenToServiceRequests(async (payload) => {
+      const newRequest = payload.new
+
+      // 가게 정보 가져오기
+      const { data: storeData } = await supabase
+        .from('stores')
+        .select('name')
+        .eq('id', newRequest.store_id)
+        .single()
+
+      // 서비스 정보 가져오기
+      const { data: serviceData } = await supabase
+        .from('services')
+        .select('name')
+        .eq('id', newRequest.service_id)
+        .single()
+
+      // 알림 표시
+      await showNotification('새로운 서비스 요청', {
+        body: `${storeData?.name || '가게'}에서 ${serviceData?.name || '서비스'}를 요청했습니다.`,
+        data: { url: `/admin/dashboard/services/${newRequest.id}` }
+      })
+    })
+
+    return unsubscribe
+  }, [permission, user, listenToServiceRequests, showNotification])
 
   const handleSignOut = async () => {
     if (confirm('로그아웃 하시겠습니까?')) {
@@ -150,15 +192,27 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </h2>
             </div>
 
-            <button
-              onClick={handleSignOut}
-              className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">로그아웃</span>
-            </button>
+            <div className="flex items-center gap-4">
+              {/* 알림 상태 표시 */}
+              <NotificationStatus permission={permission} />
+
+              <button
+                onClick={handleSignOut}
+                className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">로그아웃</span>
+              </button>
+            </div>
           </div>
         </header>
+
+        {/* 알림 권한 요청 배너 */}
+        <NotificationBanner
+          isSupported={isSupported}
+          permission={permission}
+          onRequestPermission={requestPermission}
+        />
 
         {/* 페이지 콘텐츠 */}
         <main className="flex-1">

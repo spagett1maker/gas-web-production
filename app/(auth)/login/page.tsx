@@ -123,7 +123,7 @@ export default function LoginPage() {
         return
       }
       if (profile?.role === 'admin') {
-        router.replace('/admin/service')
+        router.replace('/admin/dashboard')
       } else {
         setError('관리자 권한이 없는 계정입니다.')
       }
@@ -169,7 +169,7 @@ export default function LoginPage() {
       return
     }
     if (profile?.role === 'admin') {
-      router.replace('/admin/service')
+      router.replace('/admin/dashboard')
       return
     }
 
