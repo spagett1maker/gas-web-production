@@ -241,7 +241,7 @@ function ServicesPageContent() {
                                 </p>
                               </div>
                               <Link
-                                href={`/admin/dashboard/services/${request.id}`}
+                                href={`/admin/dashboard/services/detail?id=${request.id}`}
                                 className="flex items-center px-3 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                               >
                                 <Eye className="h-4 w-4 mr-1" />

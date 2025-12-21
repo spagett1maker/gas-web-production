@@ -1,5 +1,4 @@
-import { createBrowserClient } from '@supabase/ssr'
-import { SupabaseClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -8,7 +7,14 @@ let supabaseInstance: SupabaseClient | null = null
 
 const initSupabase = () => {
   if (!supabaseInstance) {
-    supabaseInstance = createBrowserClient(supabaseUrl, supabaseAnonKey)
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false, // Capacitor에서는 URL 세션 감지 비활성화
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      },
+    })
   }
   return supabaseInstance
 }

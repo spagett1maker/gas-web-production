@@ -149,9 +149,8 @@ export default function LoginPage() {
       return
     }
 
-    // 세션에서 내 id/phone 가져오기
-    const { data: { session } } = await supabase.auth.getSession()
-    const userId = session?.user.id
+    // verifyOtp 응답에서 직접 세션/유저 정보 가져오기
+    const userId = data?.user?.id || data?.session?.user?.id
     if (!userId) {
       setError('유저 정보를 불러올 수 없습니다.')
       return

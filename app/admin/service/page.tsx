@@ -163,7 +163,7 @@ export default function AdminServicePage() {
                     <button
                       key={service.id}
                       className="w-full flex items-center px-6 py-4 bg-white hover:bg-gray-50 transition-colors active:bg-gray-100"
-                      onClick={() => router.push(`/admin/service/${service.id}`)}
+                      onClick={() => router.push(`/admin/service/detail?id=${service.id}`)}
                     >
                       <div className="text-3xl mr-4">{icon}</div>
                       <span className="flex-1 text-left text-[17px] font-bold text-gray-800">

@@ -28,15 +28,14 @@ export default function HomePage() {
         const { data: { session }, error } = await supabase.auth.getSession()
 
         if (error || !session) {
-          // 클라이언트 사이드 리다이렉트를 더 확실하게
-          window.location.href = '/login'
+          router.replace('/login')
           return
         }
 
         setLoading(false)
       } catch (error) {
         console.error('Auth check error:', error)
-        window.location.href = '/login'
+        router.replace('/login')
       }
     }
 

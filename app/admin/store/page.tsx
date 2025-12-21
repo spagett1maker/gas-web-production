@@ -75,7 +75,7 @@ export default function AdminStorePage() {
               {stores.map((store) => (
                 <button
                   key={store.id}
-                  onClick={() => router.push(`/admin/store/${store.id}`)}
+                  onClick={() => router.push(`/admin/store/detail?id=${store.id}`)}
                   className="w-full bg-white border border-gray-200 rounded-2xl p-4 hover:border-[#EB5A36] transition-colors text-left"
                 >
                   <div className="flex items-start justify-between">
