@@ -11,7 +11,7 @@ const SERVICES = [
   { key: 'valve', label: '밸브 교체\n(공기 조절기)', image: '/images/valve.png' },
   { key: 'alarm', label: '경보기 교체', image: '/images/alarm.png' },
   { key: 'quote', label: '시공견적 문의', image: '/images/quote.png' },
-  { key: 'pipe', label: '배관 철거', image: '/images/pipe.png' },
+  { key: 'pipe', label: '배관 시공 및 철거', image: '/images/pipe.png' },
   { key: 'gas', label: '가스누출 검사', image: '/images/gas.png' },
   { key: 'contract', label: '정기계약 이용권', image: '/images/contract.png' },
   { key: 'center', label: '고객센터', image: '/images/center.png' },
