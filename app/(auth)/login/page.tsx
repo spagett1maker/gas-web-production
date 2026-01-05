@@ -11,6 +11,12 @@ import Image from 'next/image'
 
 const ADMIN_EMAIL = 'GAS@gas.com'
 
+// App Store 심사용 데모 계정 설정
+const DEMO_PHONE = process.env.NEXT_PUBLIC_DEMO_PHONE || '01000000000'
+const DEMO_OTP = process.env.NEXT_PUBLIC_DEMO_OTP || '123456'
+const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL
+const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD
+
 export default function LoginPage() {
   const [phoneOrEmail, setPhoneOrEmail] = useState('')
   const [code, setCode] = useState('')
@@ -48,6 +54,15 @@ export default function LoginPage() {
 
     // 일반 유저: 휴대폰 로그인
     const internationalPhone = toInternational(phoneOrEmail)
+    const inputPhoneNormalized = phoneOrEmail.replace(/-/g, '')
+
+    // 데모 계정 체크 (App Store 심사용) - 가장 먼저 확인
+    if (inputPhoneNormalized === DEMO_PHONE && DEMO_EMAIL && DEMO_PASSWORD) {
+      // 데모 계정은 실제 SMS 발송 없이 바로 OTP 입력 화면으로
+      setOtpSent(true)
+      alert('인증번호가 전송되었습니다.')
+      return
+    }
 
     setLoading(true)
 
@@ -137,20 +152,43 @@ export default function LoginPage() {
       return
     }
     setLoading(true)
-    const { data, error: verifyError } = await supabase.auth.verifyOtp({
-      phone: internationalPhone,
-      token: code,
-      type: 'sms',
-    })
-    setLoading(false)
 
-    if (verifyError) {
-      setError(verifyError.message)
-      return
+    // 데모 계정 처리 (App Store 심사용)
+    const inputPhoneNormalized = phoneOrEmail.replace(/-/g, '')
+    const isDemoAccount = inputPhoneNormalized === DEMO_PHONE && code === DEMO_OTP
+
+    let userId: string | undefined
+
+    if (isDemoAccount && DEMO_EMAIL && DEMO_PASSWORD) {
+      // 데모 계정: 고정 OTP 코드로 이메일/비밀번호 로그인
+      const { data: demoData, error: demoError } = await supabase.auth.signInWithPassword({
+        email: DEMO_EMAIL,
+        password: DEMO_PASSWORD,
+      })
+      setLoading(false)
+
+      if (demoError) {
+        setError('데모 계정 로그인 실패: ' + demoError.message)
+        return
+      }
+      userId = demoData?.user?.id
+    } else {
+      // 일반 계정: Supabase OTP 검증
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+        phone: internationalPhone,
+        token: code,
+        type: 'sms',
+      })
+      setLoading(false)
+
+      if (verifyError) {
+        setError(verifyError.message)
+        return
+      }
+      // verifyOtp 응답에서 직접 세션/유저 정보 가져오기
+      userId = data?.user?.id || data?.session?.user?.id
     }
 
-    // verifyOtp 응답에서 직접 세션/유저 정보 가져오기
-    const userId = data?.user?.id || data?.session?.user?.id
     if (!userId) {
       setError('유저 정보를 불러올 수 없습니다.')
       return

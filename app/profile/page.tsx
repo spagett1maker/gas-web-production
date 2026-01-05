@@ -11,8 +11,12 @@ import { Button } from '@/components/ui/Button'
 export default function ProfilePage() {
   const [isEnabled, setIsEnabled] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [deleteConfirmModalVisible, setDeleteConfirmModalVisible] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [phone, setPhone] = useState('010-9876-5432')
   const [store, setStore] = useState('')
+  const [userId, setUserId] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -24,6 +28,8 @@ export default function ProfilePage() {
         router.push('/login')
         return
       }
+
+      setUserId(user.id)
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -54,6 +60,55 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.replace('/login')
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!userId) return
+
+    setIsDeleting(true)
+    try {
+      // 1. 사용자의 서비스 요청 삭제
+      await supabase
+        .from('services')
+        .delete()
+        .eq('user_id', userId)
+
+      // 2. 사용자의 문의 삭제
+      await supabase
+        .from('inquiries')
+        .delete()
+        .eq('user_id', userId)
+
+      // 3. 사용자의 매장 삭제
+      await supabase
+        .from('stores')
+        .delete()
+        .eq('owner_id', userId)
+
+      // 4. 프로필 삭제
+      await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId)
+
+      // 5. Supabase Auth 계정 삭제 (RPC 함수 호출)
+      const { error } = await supabase.rpc('delete_user')
+
+      if (error) {
+        console.error('계정 삭제 오류:', error)
+        // RPC 함수가 없어도 데이터는 삭제되었으므로 로그아웃 처리
+      }
+
+      // 6. 로그아웃 및 로그인 페이지로 이동
+      await supabase.auth.signOut()
+      router.replace('/login')
+    } catch (error) {
+      console.error('계정 삭제 중 오류:', error)
+      alert('계정 삭제 중 오류가 발생했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsDeleting(false)
+      setDeleteConfirmModalVisible(false)
+    }
   }
 
   return (
@@ -185,6 +240,16 @@ export default function ProfilePage() {
           label="고객센터"
           onPress={() => router.push('/contact')}
         />
+        <MenuItem
+          icon={
+            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          }
+          label="계정 삭제"
+          onPress={() => setDeleteModalVisible(true)}
+          danger
+        />
       </div>
 
       {/* 알림 받기 스위치 */}
@@ -242,6 +307,111 @@ export default function ProfilePage() {
           </div>
         </div>
       </Modal>
+
+      {/* 계정 삭제 1차 확인 모달 */}
+      <Modal
+        isOpen={deleteModalVisible}
+        onClose={() => setDeleteModalVisible(false)}
+        title="계정 삭제"
+      >
+        <div className="space-y-4">
+          <div className="text-center py-4">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <p className="text-gray-700 text-base mb-2">
+              정말 계정을 삭제하시겠습니까?
+            </p>
+            <p className="text-gray-500 text-sm">
+              계정을 삭제하면 모든 데이터가 영구적으로 삭제되며,<br />
+              복구할 수 없습니다.
+            </p>
+          </div>
+          <div className="flex space-x-3">
+            <Button
+              onClick={() => setDeleteModalVisible(false)}
+              variant="secondary"
+              fullWidth
+            >
+              취소
+            </Button>
+            <Button
+              onClick={() => {
+                setDeleteModalVisible(false)
+                setDeleteConfirmModalVisible(true)
+              }}
+              className="!bg-red-500 hover:!bg-red-600"
+              fullWidth
+            >
+              계정 삭제
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 계정 삭제 2차 확인 모달 */}
+      <Modal
+        isOpen={deleteConfirmModalVisible}
+        onClose={() => !isDeleting && setDeleteConfirmModalVisible(false)}
+        title="최종 확인"
+      >
+        <div className="space-y-4">
+          <div className="text-center py-4">
+            <p className="text-gray-700 text-base mb-2">
+              <strong>삭제되는 정보:</strong>
+            </p>
+            <ul className="text-gray-500 text-sm text-left bg-gray-50 rounded-lg p-4 space-y-2">
+              <li className="flex items-center">
+                <svg className="w-4 h-4 text-red-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                가게 정보 및 프로필
+              </li>
+              <li className="flex items-center">
+                <svg className="w-4 h-4 text-red-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                서비스 신청 내역
+              </li>
+              <li className="flex items-center">
+                <svg className="w-4 h-4 text-red-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                문의 내역
+              </li>
+              <li className="flex items-center">
+                <svg className="w-4 h-4 text-red-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                계정 정보
+              </li>
+            </ul>
+            <p className="text-red-500 text-sm mt-4 font-medium">
+              이 작업은 되돌릴 수 없습니다.
+            </p>
+          </div>
+          <div className="flex space-x-3">
+            <Button
+              onClick={() => setDeleteConfirmModalVisible(false)}
+              variant="secondary"
+              fullWidth
+              disabled={isDeleting}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleDeleteAccount}
+              className="!bg-red-500 hover:!bg-red-600"
+              fullWidth
+              disabled={isDeleting}
+            >
+              {isDeleting ? '삭제 중...' : '영구 삭제'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
@@ -251,22 +421,26 @@ function MenuItem({
   icon,
   label,
   onPress,
+  danger,
 }: {
   icon: React.ReactNode
   label: string
   onPress?: () => void
+  danger?: boolean
 }) {
   return (
     <button
-      className="w-full flex items-center justify-between py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+      className={`w-full flex items-center justify-between py-3 border-b border-gray-100 transition-colors ${
+        danger ? 'hover:bg-red-50' : 'hover:bg-gray-50'
+      }`}
       onClick={onPress}
     >
       <div className="flex items-center">
         {icon}
-        <span className="ml-3 text-base text-gray-800">{label}</span>
+        <span className={`ml-3 text-base ${danger ? 'text-red-500' : 'text-gray-800'}`}>{label}</span>
       </div>
       <svg
-        className="w-5 h-5 text-gray-400"
+        className={`w-5 h-5 ${danger ? 'text-red-400' : 'text-gray-400'}`}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
