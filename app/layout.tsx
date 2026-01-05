@@ -4,6 +4,7 @@ import "./globals.css";
 import BottomTabBar from "@/components/BottomTabBar";
 import AdminTabBar from "@/components/AdminTabBar";
 import NotificationProvider from "@/components/NotificationProvider";
+import AnnouncementBar from "@/components/AnnouncementBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <AnnouncementBar />
         {children}
         <BottomTabBar />
         <AdminTabBar />
