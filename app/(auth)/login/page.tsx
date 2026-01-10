@@ -14,8 +14,8 @@ const ADMIN_EMAIL = 'GAS@gas.com'
 // App Store 심사용 데모 계정 설정
 const DEMO_PHONE = process.env.NEXT_PUBLIC_DEMO_PHONE || '01000000000'
 const DEMO_OTP = process.env.NEXT_PUBLIC_DEMO_OTP || '123456'
-const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL
-const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD
+const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL || 'appreview.demo@gmail.com'
+const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD || 'Demo123456!'
 
 export default function LoginPage() {
   const [phoneOrEmail, setPhoneOrEmail] = useState('')
