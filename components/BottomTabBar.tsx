@@ -98,7 +98,7 @@ export default function BottomTabBar() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[var(--color-border)] z-50 md:hidden shadow-lg">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[var(--color-border)] z-50 shadow-lg">
       <div className="flex justify-around items-center h-16">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href
