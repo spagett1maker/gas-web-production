@@ -1,114 +1,40 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import Script from 'next/script'
-
-declare global {
-  interface Window {
-    kakao: any
-  }
-}
+import { ArrowLeft, X, Search } from 'lucide-react'
 
 const KAKAO_REST_API_KEY = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY || ''
-const KAKAO_JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY || ''
 
 export default function AddStorePage() {
   const router = useRouter()
-  const [name, setName] = useState('')
   const [address, setAddress] = useState('')
-  const [marker, setMarker] = useState<{ lat: number; lng: number } | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [searchResults, setSearchResults] = useState<any[]>([])
-  const [mapLoaded, setMapLoaded] = useState(false)
+  const [addressDetail, setAddressDetail] = useState('')
+  const [name, setName] = useState('')
+  const [isDemoMode, setIsDemoMode] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
 
-  const mapRef = useRef<any>(null)
-  const mapMarkerRef = useRef<any>(null)
+  // 검색 관련
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
 
   useEffect(() => {
+    const isDemo = localStorage.getItem('demo_mode') === 'true'
+    if (isDemo) {
+      setIsDemoMode(true)
+      return
+    }
+
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         router.replace('/login')
-        return
       }
     }
-
     checkAuth()
   }, [router])
-
-  useEffect(() => {
-    // 카카오맵 SDK가 로드되면 지도 초기화
-    if (mapLoaded && window.kakao && window.kakao.maps) {
-      initMap()
-    }
-  }, [mapLoaded])
-
-  const initMap = () => {
-    const container = document.getElementById('map')
-    if (!container) return
-
-    const options = {
-      center: new window.kakao.maps.LatLng(37.5665, 126.978), // 서울 기본 좌표
-      level: 3,
-    }
-
-    const map = new window.kakao.maps.Map(container, options)
-    mapRef.current = map
-
-    // 지도 클릭 이벤트
-    window.kakao.maps.event.addListener(map, 'click', (mouseEvent: any) => {
-      const latlng = mouseEvent.latLng
-      const lat = latlng.getLat()
-      const lng = latlng.getLng()
-
-      setMarker({ lat, lng })
-      updateMarker(lat, lng)
-      reverseGeocode(lat, lng)
-    })
-  }
-
-  const updateMarker = (lat: number, lng: number) => {
-    if (!mapRef.current) return
-
-    // 기존 마커 제거
-    if (mapMarkerRef.current) {
-      mapMarkerRef.current.setMap(null)
-    }
-
-    // 새 마커 생성
-    const markerPosition = new window.kakao.maps.LatLng(lat, lng)
-    const newMarker = new window.kakao.maps.Marker({
-      position: markerPosition,
-    })
-
-    newMarker.setMap(mapRef.current)
-    mapMarkerRef.current = newMarker
-
-    // 지도 중심 이동
-    mapRef.current.setCenter(markerPosition)
-  }
-
-  const reverseGeocode = async (lat: number, lng: number) => {
-    try {
-      const res = await fetch(
-        `https://dapi.kakao.com/v2/local/geo/coord2address.json?x=${lng}&y=${lat}`,
-        {
-          headers: { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` },
-        }
-      )
-      const json = await res.json()
-      const addressName =
-        json.documents?.[0]?.road_address?.address_name ||
-        json.documents?.[0]?.address?.address_name
-      if (addressName) setAddress(addressName)
-    } catch (e) {
-      console.warn('역지오코딩 실패:', e)
-    }
-  }
 
   const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
     let timeoutId: NodeJS.Timeout
@@ -118,6 +44,7 @@ export default function AddStorePage() {
     }
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchPlaces = useCallback(
     debounce(async (keyword: string) => {
       if (!keyword.trim()) {
@@ -125,87 +52,67 @@ export default function AddStorePage() {
         return
       }
 
-      setLoading(true)
+      setSearchLoading(true)
       try {
         // 키워드 검색
         const res = await fetch(
           `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(keyword)}`,
-          {
-            headers: { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` },
-          }
+          { headers: { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` } }
         )
         const json = await res.json()
-        const results = json.documents || []
+        let results = json.documents || []
 
         if (results.length === 0) {
-          // 주소 검색
+          // 주소 검색 fallback
           const addrRes = await fetch(
             `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(keyword)}`,
-            {
-              headers: { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` },
-            }
+            { headers: { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` } }
           )
           const addrJson = await addrRes.json()
-          const first = addrJson.documents?.[0]
-
-          if (first) {
-            const lat = parseFloat(first.y)
-            const lng = parseFloat(first.x)
-            setMarker({ lat, lng })
-            setAddress(first.address?.address_name || keyword)
-            updateMarker(lat, lng)
-
-            setSearchResults([
-              {
-                id: 'address_result',
-                place_name: first.address?.address_name || keyword,
-                road_address_name: '',
-                address_name: first.address?.address_name || keyword,
-                phone: '',
-                x: first.x,
-                y: first.y,
-              },
-            ])
-          } else {
-            setSearchResults([])
-          }
-        } else {
-          setSearchResults(results)
+          results = (addrJson.documents || []).map((doc: any) => ({
+            id: doc.address?.address_name || doc.road_address?.address_name,
+            place_name: doc.road_address?.address_name || doc.address?.address_name || keyword,
+            road_address_name: doc.road_address?.address_name || '',
+            address_name: doc.address?.address_name || '',
+            x: doc.x,
+            y: doc.y,
+          }))
         }
+
+        setSearchResults(results)
       } catch (e) {
         console.warn('검색 실패:', e)
       }
-      setLoading(false)
+      setSearchLoading(false)
     }, 400),
-    [mapLoaded]
+    []
   )
 
-  const handleAddressChange = (text: string) => {
-    setAddress(text)
+  const handleSearchInput = (text: string) => {
+    setSearchQuery(text)
     searchPlaces(text)
   }
 
-  const handleSelectStore = (item: any) => {
-    const fullAddress = item.road_address_name || item.address_name
-    setName(item.place_name)
-    setAddress(fullAddress)
-
-    const lat = parseFloat(item.y)
-    const lng = parseFloat(item.x)
-    setMarker({ lat, lng })
-    updateMarker(lat, lng)
-
-    setSearchResults([
-      {
-        ...item,
-        id: 'selected_result',
-      },
-    ])
+  const handleSelectAddress = (item: any) => {
+    const selectedAddress = item.road_address_name || item.address_name || item.place_name
+    setAddress(selectedAddress)
+    if (item.place_name && item.place_name !== selectedAddress) {
+      setName(item.place_name)
+    }
+    setShowSearch(false)
+    setSearchQuery('')
+    setSearchResults([])
   }
 
+  const fullAddress = addressDetail
+    ? `${address} ${addressDetail}`
+    : address
+
   const saveStore = async () => {
-    if (!name.trim() || !address.trim()) {
-      alert('가게 이름과 주소를 입력해주세요.')
+    if (!name.trim() || !address.trim()) return
+
+    if (isDemoMode) {
+      router.push('/home')
       return
     }
 
@@ -223,7 +130,7 @@ export default function AddStorePage() {
       .insert({
         user_id: userId,
         name,
-        address,
+        address: fullAddress,
       })
 
     if (error) {
@@ -234,116 +141,217 @@ export default function AddStorePage() {
     router.push('/profile/my-store')
   }
 
-  return (
-    <>
-      <Script
-        src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JAVASCRIPT_KEY}&autoload=false`}
-        onLoad={() => {
-          // window.kakao가 로드될 때까지 대기
-          const checkKakao = () => {
-            if (window.kakao && window.kakao.maps) {
-              window.kakao.maps.load(() => setMapLoaded(true))
-            } else {
-              setTimeout(checkKakao, 100)
-            }
-          }
-          checkKakao()
-        }}
-      />
+  const isValid = name.trim() && address.trim()
 
-      <div className="min-h-screen bg-white flex flex-col">
-        {/* 상단 헤더 */}
-        <header className="pt-6 pb-4 px-5 flex items-center justify-between bg-white border-b border-gray-200 z-20">
-          <button onClick={() => router.back()} className="p-2 -ml-2">
-            <svg
-              className="w-7 h-7 text-gray-800"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+  // 주소 검색 화면
+  if (showSearch) {
+    return (
+      <div className="page-without-tabs bg-white">
+        {/* 검색 헤더 */}
+        <div className="app-header">
+          <div className="h-[48px] px-4 flex items-center gap-3">
+            <button
+              onClick={() => {
+                setShowSearch(false)
+                setSearchQuery('')
+                setSearchResults([])
+              }}
+              className="w-10 h-10 flex items-center justify-center -ml-1 rounded-full active:bg-[#F5F5F7] transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
+              <X className="w-[22px] h-[22px] text-[#1A1A1A]" strokeWidth={1.8} />
+            </button>
+            <span className="text-[17px] font-semibold text-[#1A1A1A] tracking-[-0.3px]">
+              주소 검색
+            </span>
+          </div>
+        </div>
+
+        <div className="page-content">
+          {/* 검색 입력 */}
+          <div className="px-5 pt-3 pb-4">
+            <div className="h-[48px] bg-[#F5F5F7] rounded-[10px] flex items-center px-4 gap-2.5">
+              <Search className="w-[18px] h-[18px] text-[#8E8E93] flex-shrink-0" strokeWidth={2} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => handleSearchInput(e.target.value)}
+                placeholder="도로명, 건물명 또는 지번 검색"
+                autoFocus
+                className="w-full bg-transparent text-[15px] text-[#1A1A1A] placeholder:text-[#C7C7CC] outline-none tracking-[-0.2px]"
               />
-            </svg>
-          </button>
-          <h1 className="text-[22px] font-bold text-gray-800">나의 가게</h1>
-          <div className="w-7" />
-        </header>
-
-        {/* 지도 */}
-        {/* <div id="map" className="w-full h-[300px] flex-shrink-0" /> */}
-
-        {/* 위치 정보 입력 영역 */}
-        <div className="flex-1 bg-white px-6 pt-6 pb-24 overflow-y-auto">
-          {/* <h2 className="font-bold text-[18px] mb-4 text-center text-gray-800">
-            위치 정보
-          </h2> */}
-
-          <div className="mb-4 w-full">
-            <Input
-              type="text"
-              placeholder="가게 위치 (주소 검색)"
-              value={address}
-              onChange={(e) => handleAddressChange(e.target.value)}
-              className="w-full"
-            />
+            </div>
           </div>
 
-          {/* 검색 결과 */}
-          <div className="mb-4 max-h-[200px] overflow-y-auto">
-            {searchResults.length > 0 ? (
-              searchResults.map((item) => (
+          {/* 검색 결과 or 검색 예시 */}
+          {searchResults.length > 0 ? (
+            <div className="px-5">
+              {searchResults.map((item, idx) => (
                 <button
-                  key={item.id}
-                  className="w-full border-b border-gray-200 py-3 px-4 bg-white hover:bg-gray-50 text-left"
-                  onClick={() => handleSelectStore(item)}
+                  key={item.id || idx}
+                  className="w-full py-3.5 border-b border-[#F2F2F7] text-left active:bg-[#F9F9F9] transition-colors"
+                  onClick={() => handleSelectAddress(item)}
                 >
-                  <p className="font-bold text-base text-gray-800">
+                  <p className="text-[15px] font-medium text-[#1A1A1A] tracking-[-0.2px]">
                     {item.place_name}
                   </p>
-                  <p className="text-gray-600 text-sm">
-                    {item.road_address_name || item.address_name}
-                  </p>
-                  {item.phone && (
-                    <p className="text-xs text-gray-400">{item.phone}</p>
+                  {(item.road_address_name || item.address_name) && item.place_name !== (item.road_address_name || item.address_name) && (
+                    <p className="text-[13px] text-[#8E8E93] tracking-[-0.2px] mt-0.5">
+                      {item.road_address_name || item.address_name}
+                    </p>
                   )}
                 </button>
-              ))
-            ) : (
-              !loading && address.trim() !== '' && (
-                <p className="text-center text-gray-400 mt-8">
-                  검색 결과가 없습니다.
-                </p>
-              )
-            )}
-          </div>
+              ))}
+            </div>
+          ) : searchQuery.trim() && !searchLoading ? (
+            <div className="px-5 pt-8 text-center">
+              <p className="text-[14px] text-[#C7C7CC] tracking-[-0.2px]">
+                검색 결과가 없습니다.
+              </p>
+            </div>
+          ) : !searchQuery.trim() ? (
+            <div className="px-5 pt-2">
+              <p className="text-[14px] font-medium text-[#8E8E93] tracking-[-0.2px] mb-5">
+                검색 예시
+              </p>
 
-          {loading && (
-            <div className="flex justify-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#EB5A36]" />
+              <div className="space-y-5">
+                <div>
+                  <p className="text-[15px] font-medium text-[#1A1A1A] tracking-[-0.2px]">
+                    도로명 + 건물번호
+                  </p>
+                  <p className="text-[13px] text-[#C7C7CC] tracking-[-0.2px] mt-0.5">
+                    예) 서초대로
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[15px] font-medium text-[#1A1A1A] tracking-[-0.2px]">
+                    동/읍/면/리 + 번지
+                  </p>
+                  <p className="text-[13px] text-[#C7C7CC] tracking-[-0.2px] mt-0.5">
+                    예) 서초동 999-999
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[15px] font-medium text-[#1A1A1A] tracking-[-0.2px]">
+                    건물명/아파트명
+                  </p>
+                  <p className="text-[13px] text-[#C7C7CC] tracking-[-0.2px] mt-0.5">
+                    예) 서초자이아파트
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {searchLoading && (
+            <div className="flex justify-center py-6">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#E5E5EA] border-t-[#EB5B37]" />
             </div>
           )}
         </div>
+      </div>
+    )
+  }
 
-        {/* 저장 버튼 고정 */}
-        <div className="fixed bottom-16 left-0 right-0 px-6 py-4 bg-white border-t border-[var(--color-border)] shadow-lg">
-          <Button
-            onClick={saveStore}
-            disabled={!name.trim() || !address.trim()}
-            fullWidth
-            className={
-              !name.trim() || !address.trim()
-                ? 'bg-[#FADCD2] hover:bg-[#FADCD2]'
-                : ''
-            }
+  // 메인 폼 화면
+  return (
+    <div className="page-without-tabs bg-white">
+      {/* 헤더 */}
+      <div className="app-header">
+        <div className="h-[48px] px-4 flex items-center">
+          <button
+            onClick={() => router.back()}
+            className="w-10 h-10 flex items-center justify-center -ml-1 rounded-full active:bg-[#F5F5F7] transition-colors"
           >
-            저장
-          </Button>
+            <ArrowLeft className="w-[22px] h-[22px] text-[#1A1A1A]" strokeWidth={1.8} />
+          </button>
         </div>
       </div>
-    </>
+
+      <div className="page-content">
+        {/* 타이틀 */}
+        <div className="px-5 pt-4 pb-8">
+          <h1 className="text-[26px] font-bold text-[#1A1A1A] tracking-[-0.6px] leading-[1.35]">
+            서비스 이용을 위해<br />
+            주소를 입력해주세요.
+          </h1>
+        </div>
+
+        {isDemoMode && (
+          <div className="mx-5 mb-4 p-3 bg-[#F5F5F7] rounded-[10px]">
+            <p className="text-[12px] text-[#8E8E93] tracking-[-0.2px]">
+              데모 모드
+            </p>
+          </div>
+        )}
+
+        {/* 주소 */}
+        <div className="px-5 mb-5">
+          <label className="text-[14px] font-medium text-[#1A1A1A] tracking-[-0.2px] mb-2 block">
+            주소
+          </label>
+          <button
+            onClick={() => setShowSearch(true)}
+            className="w-full h-[52px] bg-[#F5F5F7] rounded-[10px] flex items-center px-4 gap-2.5 text-left active:bg-[#EBEBED] transition-colors"
+          >
+            <Search className="w-[18px] h-[18px] text-[#8E8E93] flex-shrink-0" strokeWidth={2} />
+            {address ? (
+              <span className="text-[15px] text-[#1A1A1A] tracking-[-0.2px] truncate">{address}</span>
+            ) : (
+              <span className="text-[15px] text-[#C7C7CC] tracking-[-0.2px]">도로명, 건물명 또는 지번 검색</span>
+            )}
+          </button>
+        </div>
+
+        {/* 상세 주소 */}
+        <div className="px-5 mb-5">
+          <label className="text-[14px] font-medium text-[#1A1A1A] tracking-[-0.2px] mb-2 block">
+            상세 주소
+          </label>
+          <div className="h-[52px] bg-[#F5F5F7] rounded-[10px] flex items-center px-4">
+            <input
+              type="text"
+              value={addressDetail}
+              onChange={e => setAddressDetail(e.target.value)}
+              placeholder="건물, 아파트, 동/호수 입력"
+              className="w-full bg-transparent text-[15px] text-[#1A1A1A] placeholder:text-[#C7C7CC] outline-none tracking-[-0.2px]"
+            />
+          </div>
+        </div>
+
+        {/* 가게 이름 */}
+        <div className="px-5 mb-5">
+          <label className="text-[14px] font-medium text-[#1A1A1A] tracking-[-0.2px] mb-2 block">
+            가게 이름
+          </label>
+          <div className="h-[52px] bg-[#F5F5F7] rounded-[10px] flex items-center px-4">
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="예) 우리가게"
+              className="w-full bg-transparent text-[15px] text-[#1A1A1A] placeholder:text-[#C7C7CC] outline-none tracking-[-0.2px]"
+            />
+          </div>
+        </div>
+
+        <div className="bottom-spacer" />
+      </div>
+
+      {/* 다음 버튼 */}
+      <div className="page-bottom">
+        <button
+          onClick={saveStore}
+          disabled={!isValid}
+          className={`w-full h-[54px] rounded-xl text-[16px] font-semibold tracking-[-0.3px] transition-colors ${
+            isValid
+              ? 'bg-[#1A1A1A] text-white active:bg-[#333]'
+              : 'bg-[#F5F5F7] text-[#C7C7CC]'
+          }`}
+        >
+          다음
+        </button>
+      </div>
+    </div>
   )
 }

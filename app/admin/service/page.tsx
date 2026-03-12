@@ -85,34 +85,37 @@ export default function AdminServicePage() {
   }, {} as Record<string, typeof requests>)
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="page-without-tabs bg-white">
       {/* 상단 헤더 */}
-      <header className="pt-6 pb-4 px-5 flex items-center justify-between sticky top-0 bg-white z-10 border-b border-gray-100">
-        <div className="w-7" />
-        <h1 className="text-[22px] font-bold text-gray-800">서비스 관리</h1>
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut()
-            router.replace('/login')
-          }}
-          className="p-2 -mr-2"
-        >
-          <svg
-            className="w-7 h-7 text-gray-800"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+      <header className="app-header">
+        <div className="h-[52px] px-5 flex items-center justify-between">
+          <div className="w-7" />
+          <h1 className="text-[22px] font-bold text-gray-800">서비스 관리</h1>
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut()
+              router.replace('/login')
+            }}
+            className="p-2 -mr-2"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-            />
-          </svg>
-        </button>
+            <svg
+              className="w-7 h-7 text-gray-800"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+          </button>
+        </div>
       </header>
 
+      <div className="page-content">
       {/* 카테고리 필터 */}
       <div className="overflow-x-auto px-3 py-4 mb-2">
         <div className="flex space-x-2">
@@ -186,6 +189,7 @@ export default function AdminServicePage() {
           )}
         </div>
       )}
+      </div>
     </div>
   )
 }

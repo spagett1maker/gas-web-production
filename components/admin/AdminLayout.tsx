@@ -103,7 +103,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen-safe bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
       </div>
     )
@@ -112,7 +112,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen-safe bg-gray-50">
       {/* 모바일 사이드바 오버레이 */}
       {sidebarOpen && (
         <div
@@ -123,7 +123,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* 사이드바 */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 safe-top",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
@@ -177,7 +177,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* 메인 콘텐츠 */}
       <div className="lg:pl-64">
         {/* 상단 헤더 */}
-        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30 safe-top">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             <button
               onClick={() => setSidebarOpen(true)}

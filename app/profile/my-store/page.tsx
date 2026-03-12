@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Loading } from '@/components/ui/Loading'
 import { Button } from '@/components/ui/Button'
+import { ArrowLeft } from 'lucide-react'
 
 export default function MyStorePage() {
   const [stores, setStores] = useState<any[]>([])
@@ -78,30 +79,23 @@ export default function MyStorePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-32">
+    <div className="page-with-tabs bg-white">
       {/* 상단 헤더 */}
-      <header className="pt-6 pb-2 px-5 flex items-center justify-between sticky top-0 bg-white z-10">
-        <button onClick={() => router.back()} className="p-2 -ml-2">
-          <svg
-            className="w-7 h-7 text-gray-800"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+      <header className="app-header">
+        <div className="h-[48px] px-4 flex items-center justify-between">
+          <button
+            onClick={() => router.back()}
+            className="w-10 h-10 flex items-center justify-center -ml-1 rounded-full active:bg-[#F5F5F7] transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-        <h1 className="text-[22px] font-bold text-gray-800">나의 가게</h1>
-        <div className="w-7" />
+            <ArrowLeft className="w-[22px] h-[22px] text-[#1A1A1A]" strokeWidth={1.8} />
+          </button>
+          <span className="text-[17px] font-semibold text-[#1A1A1A] tracking-[-0.3px]">나의 가게</span>
+          <div className="w-10" />
+        </div>
       </header>
 
       {/* 가게 리스트 */}
-      <div className="px-5 pb-24">
+      <div className="px-5 page-content">
         {loading ? (
           <Loading />
         ) : stores.length === 0 ? (
@@ -113,7 +107,7 @@ export default function MyStorePage() {
             {stores.map((store, idx) => (
               <button
                 key={store.id}
-                className="w-full bg-white rounded-2xl border border-gray-200 px-4 py-3 flex items-center justify-between hover:border-[#EB5A36] transition-colors"
+                className="w-full bg-white rounded-2xl border border-gray-200 px-4 py-3 flex items-center justify-between hover:border-[#EB5B37] transition-colors"
                 onClick={() => setSelected(idx)}
               >
                 <div className="text-left">
@@ -126,7 +120,7 @@ export default function MyStorePage() {
                   className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                     selected === idx
                       ? 'border-[#FF5A36]'
-                      : 'border-[#FADCD2]'
+                      : 'border-[#FDDED5]'
                   }`}
                 >
                   {selected === idx && (
@@ -146,15 +140,17 @@ export default function MyStorePage() {
           <span className="text-[#FF5A36] text-xl font-bold mr-2">+</span>
           <span className="text-[#FF5A36] text-base font-bold">가게 추가</span>
         </button>
+
+        <div className="bottom-spacer-with-tabs" />
       </div>
 
       {/* 하단 적용 버튼 */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-[var(--color-border)] px-6 py-4 shadow-lg">
+      <div className="page-bottom-with-tabs">
         <Button
           onClick={handleApply}
           disabled={selected === null}
           fullWidth
-          className={selected === null ? 'bg-[#FADCD2] hover:bg-[#FADCD2]' : ''}
+          className={selected === null ? 'bg-[#FDDED5] hover:bg-[#FDDED5]' : ''}
         >
           적용
         </Button>

@@ -93,35 +93,37 @@ export default function AdminStoreDetailClient({ id }: { id: string }) {
 
   if (!store) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="page-without-tabs bg-white flex items-center justify-center">
         <p className="text-gray-500">가게 정보를 찾을 수 없습니다.</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <header className="pt-6 pb-4 px-5 flex items-center justify-between bg-white border-b border-gray-200 sticky top-0 z-10">
-        <button onClick={() => router.back()} className="p-2 -ml-2">
-          <svg
-            className="w-7 h-7 text-gray-800"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-        <h1 className="text-[22px] font-bold text-gray-800">가게 정보</h1>
-        <div className="w-7" />
+    <div className="page-without-tabs bg-gray-50">
+      <header className="app-header">
+        <div className="h-[52px] px-5 flex items-center justify-between bg-white">
+          <button onClick={() => router.back()} className="p-2 -ml-2">
+            <svg
+              className="w-7 h-7 text-gray-800"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          <h1 className="text-[22px] font-bold text-gray-800">가게 정보</h1>
+          <div className="w-7" />
+        </div>
       </header>
 
-      <div className="px-5 py-6 space-y-4">
+      <div className="page-content px-5 py-6 space-y-4">
         <Card>
           <CardBody>
             <h2 className="text-lg font-bold text-gray-800 mb-4">기본 정보</h2>

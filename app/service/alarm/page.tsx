@@ -4,10 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
-import { Modal } from '@/components/ui/Modal'
+import { FeedbackModal } from '@/components/ui/FeedbackModal'
 import { Loading } from '@/components/ui/Loading'
-import DateTimeSelector from '@/components/DateTimeSelector'
-import PaymentMethodSelector from '@/components/PaymentMethodSelector'
+import { ArrowLeft, X, Check, MapPin, Calendar, Clock, CreditCard } from 'lucide-react'
 
 const OPTIONS = [
   'LPG 경보기',
@@ -15,16 +14,31 @@ const OPTIONS = [
   '그 외',
 ]
 
+const TIME_SLOTS = [
+  { id: 'morning', label: '오전', time: '09:00 - 12:00' },
+  { id: 'afternoon', label: '오후', time: '12:00 - 18:00' },
+  { id: 'evening', label: '저녁', time: '18:00 - 21:00' },
+]
+
+const PAYMENT_METHODS = [
+  { id: 'cash', label: '현금 결제', icon: '💵' },
+  { id: 'card', label: '카드 결제', icon: '💳' },
+  { id: 'transfer', label: '계좌 이체', icon: '🏦' },
+  { id: 'later', label: '추후 협의', icon: '📞' },
+]
+
 export default function AlarmReplacePage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [selected, setSelected] = useState<number | null>(null)
   const [extra, setExtra] = useState('')
-  const [visitDate, setVisitDate] = useState('')
-  const [visitTime, setVisitTime] = useState('')
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('')
   const [loading, setLoading] = useState(false)
   const [authLoading, setAuthLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [storeName, setStoreName] = useState<string | null>(null)
+  const [storeAddress, setStoreAddress] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -34,53 +48,76 @@ export default function AlarmReplacePage() {
         router.replace('/login')
         return
       }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('default_store_id')
+        .eq('id', session.user.id)
+        .single()
+
+      if (profile?.default_store_id) {
+        const { data: store } = await supabase
+          .from('stores')
+          .select('name, address')
+          .eq('id', profile.default_store_id)
+          .single()
+
+        if (store) {
+          setStoreName(store.name)
+          setStoreAddress(store.address)
+        }
+      }
+
       setAuthLoading(false)
     }
 
     checkAuth()
   }, [router])
 
-  const handleNextStep = () => {
-    if (currentStep === 1 && selected === null) {
-      alert('경보기 종류를 선택해주세요.')
-      return
+  const getNextDays = () => {
+    const days = []
+    const today = new Date()
+    for (let i = 1; i <= 14; i++) {
+      const date = new Date(today)
+      date.setDate(today.getDate() + i)
+      days.push(date)
     }
-    if (currentStep === 2 && (!visitDate || !visitTime)) {
-      alert('방문 희망 날짜와 시간을 선택해주세요.')
-      return
-    }
-    if (currentStep === 3 && !paymentMethod) {
-      alert('결제 방법을 선택해주세요.')
-      return
-    }
-    setCurrentStep((prev) => prev + 1)
+    return days
   }
 
-  const handlePrevStep = () => {
-    setCurrentStep((prev) => prev - 1)
+  const formatDate = (date: Date) => {
+    const days = ['일', '월', '화', '수', '목', '금', '토']
+    return {
+      month: date.getMonth() + 1,
+      day: date.getDate(),
+      weekday: days[date.getDay()],
+    }
   }
 
-  const getStepTitle = () => {
+  const canProceed = () => {
     switch (currentStep) {
-      case 1:
-        return '경보기 교체'
-      case 2:
-        return '방문 날짜/시간 선택'
-      case 3:
-        return '결제 방법 선택'
-      default:
-        return '경보기 교체'
+      case 1: return selected !== null
+      case 2: return selectedDate && selectedTimeSlot
+      case 3: return paymentMethod
+      default: return true
     }
+  }
+
+  const handleNext = () => {
+    if (!canProceed()) return
+    if (currentStep < 4) setCurrentStep(currentStep + 1)
+  }
+
+  const handleBack = () => {
+    if (currentStep > 1) setCurrentStep(currentStep - 1)
+    else router.back()
   }
 
   const handleSubmit = async () => {
     if (selected === null) return
-
     setLoading(true)
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
       alert('로그인 정보를 확인할 수 없습니다.')
@@ -101,28 +138,24 @@ export default function AlarmReplacePage() {
       .single()
 
     if (serviceError || !service?.id) {
-      alert('서비스 정보를 불러오지 못했습니다.')
+      alert('서비스 정보를 불러올 수 없습니다.')
       setLoading(false)
       return
     }
-
-    const now = new Date().toISOString()
 
     const { data: request, error: requestError } = await supabase
       .from('service_requests')
       .insert({
         user_id: user.id,
-        store_id: profile?.default_store_id || null,
+        store_id: profile?.default_store_id,
         service_id: service.id,
         status: '요청됨',
-        created_at: now,
-        updated_at: now,
       })
       .select('id')
       .single()
 
     if (requestError || !request) {
-      alert(requestError?.message || '요청을 생성할 수 없습니다.')
+      alert(requestError?.message || '요청 생성 실패')
       setLoading(false)
       return
     }
@@ -143,33 +176,27 @@ export default function AlarmReplacePage() {
       })
     }
 
-    // 방문 날짜/시간
-    if (visitDate && visitTime) {
+    if (selectedDate && selectedTimeSlot) {
+      const dateInfo = formatDate(selectedDate)
+      const timeSlot = TIME_SLOTS.find(t => t.id === selectedTimeSlot)
       requestDetails.push({
         request_id: request.id,
         key: '방문 희망 날짜',
-        value: visitDate,
+        value: `${dateInfo.month}월 ${dateInfo.day}일 (${dateInfo.weekday})`,
       })
       requestDetails.push({
         request_id: request.id,
         key: '방문 희망 시간',
-        value: visitTime,
+        value: timeSlot?.time || selectedTimeSlot,
       })
     }
 
-    // 결제 방법
     if (paymentMethod) {
-      const paymentMethodName = {
-        cash: '현금 결제',
-        card: '카드 결제',
-        transfer: '계좌 이체',
-        later: '추후 협의',
-      }[paymentMethod] || paymentMethod
-
+      const method = PAYMENT_METHODS.find(m => m.id === paymentMethod)
       requestDetails.push({
         request_id: request.id,
         key: '결제 방법',
-        value: paymentMethodName,
+        value: method?.label || paymentMethod,
       })
     }
 
@@ -186,178 +213,372 @@ export default function AlarmReplacePage() {
     }
   }
 
-  if (authLoading) {
-    return <Loading />
-  }
+  if (authLoading) return <Loading />
+
+  const stepTitles = ['경보기 선택', '방문 일정', '결제 방법', '신청 확인']
 
   return (
-    <div className="min-h-screen bg-white pb-20">
-      {/* 상단 헤더 */}
-      <header className="pt-6 pb-2 px-5 flex items-center justify-between sticky top-0 bg-white z-10">
-        <button
-          onClick={() => {
-            if (currentStep > 1) {
-              handlePrevStep()
-            } else {
-              router.back()
-            }
-          }}
-          className="p-2 -ml-2"
-        >
-          <svg
-            className="w-7 h-7 text-gray-800"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+    <div className="page-without-tabs bg-[#F2F4F6]">
+      {/* 헤더 */}
+      <header className="app-header bg-white">
+        <div className="h-[52px] px-4 flex items-center justify-between">
+          <button
+            onClick={handleBack}
+            className="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#F5F5F7] transition-colors -ml-1"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-        <h1 className="text-[22px] font-bold text-gray-800">{getStepTitle()}</h1>
-        <button
-          onClick={() => router.push('/notification')}
-          className="p-2 -mr-2"
-        >
-          <svg
-            className="w-7 h-7 text-gray-800"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+            <ArrowLeft className="w-[22px] h-[22px] text-[#1A1A1A]" strokeWidth={2} />
+          </button>
+
+          <span className="text-[17px] font-semibold text-[#1A1A1A] tracking-[-0.3px]">
+            {stepTitles[currentStep - 1]}
+          </span>
+
+          <button
+            onClick={() => router.back()}
+            className="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#F5F5F7] transition-colors -mr-1"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-            />
-          </svg>
-        </button>
+            <X className="w-[22px] h-[22px] text-[#8E8E93]" strokeWidth={2} />
+          </button>
+        </div>
+
+        {/* 프로그레스 바 */}
+        <div className="px-5 pb-3">
+          <div className="flex gap-1.5">
+            {[1, 2, 3, 4].map((step) => (
+              <div
+                key={step}
+                className={`h-[3px] flex-1 rounded-full transition-all duration-300 ${
+                  step <= currentStep ? 'bg-[#EB5B37]' : 'bg-[#E5E5EA]'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
       </header>
 
-      {/* 단계 표시 */}
-      <div className="px-5 py-4">
-        <div className="flex items-center justify-center gap-2">
-          {[1, 2, 3].map((step) => (
-            <div
-              key={step}
-              className={`h-2 flex-1 rounded-full transition-all ${
-                step <= currentStep ? 'bg-[#EB5A36]' : 'bg-gray-200'
-              }`}
-            />
-          ))}
-        </div>
-        <p className="text-center text-sm text-gray-500 mt-2">
-          {currentStep}/3 단계
-        </p>
-      </div>
-
-      {/* 컨텐츠 */}
-      <div className="px-5 pb-24 pt-4">
+      {/* 콘텐츠 */}
+      <main className="page-content pb-28">
         {/* Step 1: 경보기 선택 */}
         {currentStep === 1 && (
-          <>
-            {OPTIONS.map((opt, idx) => {
-              const isActive = selected === idx
-              return (
-                <button
-                  key={opt}
-                  onClick={() => setSelected(idx)}
-                  className={`w-full flex items-center rounded-2xl px-4 py-5 mb-4 border transition-colors ${
-                    isActive ? 'border-[#EB5A36]' : 'border-gray-200'
-                  }`}
-                >
-                  <div className="mr-3">
-                    <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                        isActive ? 'border-[#EB5A36]' : 'border-gray-300'
+          <div className="animate-fade-in-scale" style={{ animationDuration: '300ms' }}>
+            <div className="bg-white px-5 pt-5 pb-6">
+              <h2 className="text-[22px] font-bold text-[#1A1A1A] tracking-[-0.5px] leading-[1.35]">
+                어떤 경보기를<br />교체하시겠어요?
+              </h2>
+              <p className="text-[14px] text-[#8E8E93] tracking-[-0.2px] mt-2">
+                교체할 경보기 종류를 선택해주세요
+              </p>
+            </div>
+
+            <div className="h-2" />
+
+            {/* 옵션 리스트 */}
+            <div className="bg-white px-5 py-4">
+              <div className="space-y-2.5">
+                {OPTIONS.map((opt, idx) => {
+                  const isActive = selected === idx
+                  return (
+                    <button
+                      key={opt}
+                      onClick={() => setSelected(idx)}
+                      className={`w-full flex items-center gap-3.5 p-4 rounded-2xl transition-all duration-200 ${
+                        isActive
+                          ? 'bg-white ring-[1.5px] ring-[#EB5B37] shadow-[0_2px_16px_rgba(235,91,55,0.08)]'
+                          : 'bg-[#F8F8FA] active:bg-[#F0F0F2]'
                       }`}
                     >
-                      {isActive && <div className="w-3.5 h-3.5 rounded-full bg-[#EB5A36]" />}
-                    </div>
-                  </div>
-                  <span className="text-[17px] text-gray-800">{opt}</span>
-                </button>
-              )
-            })}
+                      <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                        isActive ? 'border-[#EB5B37] bg-[#EB5B37]' : 'border-[#D1D1D6]'
+                      }`}>
+                        {isActive && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                      </div>
+                      <span className={`text-[15px] font-semibold tracking-[-0.3px] ${
+                        isActive ? 'text-[#1A1A1A]' : 'text-[#3A3A3C]'
+                      }`}>
+                        {opt}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="h-2" />
 
             {/* 추가 요청사항 */}
-            <div className="mt-2">
+            <div className="bg-white px-5 py-5">
+              <p className="text-[13px] font-medium text-[#8E8E93] tracking-[-0.2px] mb-3">추가 요청사항 (선택)</p>
               <textarea
-                className="w-full min-h-[120px] bg-[#F6F7FB] rounded-2xl px-4 py-4 text-[15px] text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-[#EB5A36]"
-                placeholder="추가 요청사항을 입력해주세요."
+                className="w-full min-h-[100px] bg-[#F5F5F7] rounded-xl px-4 py-3.5 text-[15px] text-[#1A1A1A] tracking-[-0.2px] resize-none focus:outline-none focus:ring-1 focus:ring-[#EB5B37] placeholder:text-[#C7C7CC]"
+                placeholder="추가 요청사항을 입력해주세요"
                 value={extra}
                 onChange={(e) => setExtra(e.target.value)}
               />
             </div>
-          </>
+          </div>
         )}
 
-        {/* Step 2: 날짜/시간 선택 */}
+        {/* Step 2: 방문 일정 */}
         {currentStep === 2 && (
-          <DateTimeSelector
-            onDateChange={setVisitDate}
-            onTimeChange={setVisitTime}
-            selectedDate={visitDate}
-            selectedTime={visitTime}
-          />
+          <div className="animate-fade-in-scale" style={{ animationDuration: '300ms' }}>
+            <div className="bg-white px-5 pt-5 pb-6">
+              <h2 className="text-[22px] font-bold text-[#1A1A1A] tracking-[-0.5px] leading-[1.35]">
+                언제 방문하면<br />좋을까요?
+              </h2>
+              <p className="text-[14px] text-[#8E8E93] tracking-[-0.2px] mt-2">
+                희망하시는 날짜와 시간대를 선택해주세요
+              </p>
+            </div>
+
+            <div className="h-2" />
+
+            <div className="bg-white px-5 py-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="w-[18px] h-[18px] text-[#EB5B37]" strokeWidth={2} />
+                <h3 className="text-[15px] font-semibold text-[#1A1A1A] tracking-[-0.3px]">
+                  날짜 선택
+                </h3>
+              </div>
+
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {getNextDays().map((date, idx) => {
+                  const info = formatDate(date)
+                  const isSelected = selectedDate?.toDateString() === date.toDateString()
+                  const isWeekend = date.getDay() === 0 || date.getDay() === 6
+
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedDate(date)}
+                      className={`flex-shrink-0 w-[56px] py-2.5 rounded-xl border-[1.5px] transition-all text-center ${
+                        isSelected
+                          ? 'border-[#EB5B37] bg-[#EB5B37]'
+                          : 'border-[#F0F0F2] bg-white active:bg-[#FAFAFA]'
+                      }`}
+                    >
+                      <p className={`text-[11px] font-medium ${
+                        isSelected ? 'text-white/80' : isWeekend ? 'text-[#FF3B30]' : 'text-[#8E8E93]'
+                      }`}>
+                        {info.weekday}
+                      </p>
+                      <p className={`text-[18px] font-bold mt-0.5 ${
+                        isSelected ? 'text-white' : 'text-[#1A1A1A]'
+                      }`}>
+                        {info.day}
+                      </p>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="h-2" />
+
+            <div className="bg-white px-5 py-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Clock className="w-[18px] h-[18px] text-[#EB5B37]" strokeWidth={2} />
+                <h3 className="text-[15px] font-semibold text-[#1A1A1A] tracking-[-0.3px]">
+                  시간대 선택
+                </h3>
+              </div>
+
+              <div className="space-y-2.5">
+                {TIME_SLOTS.map((slot) => {
+                  const isSelected = selectedTimeSlot === slot.id
+                  return (
+                    <button
+                      key={slot.id}
+                      onClick={() => setSelectedTimeSlot(slot.id)}
+                      className={`w-full flex items-center gap-3.5 p-4 rounded-2xl transition-all duration-200 ${
+                        isSelected
+                          ? 'bg-white ring-[1.5px] ring-[#EB5B37] shadow-[0_2px_16px_rgba(235,91,55,0.08)]'
+                          : 'bg-[#F8F8FA] active:bg-[#F0F0F2]'
+                      }`}
+                    >
+                      <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                        isSelected ? 'border-[#EB5B37] bg-[#EB5B37]' : 'border-[#D1D1D6]'
+                      }`}>
+                        {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                      </div>
+                      <div className="text-left">
+                        <p className={`text-[15px] font-semibold tracking-[-0.3px] ${
+                          isSelected ? 'text-[#1A1A1A]' : 'text-[#3A3A3C]'
+                        }`}>
+                          {slot.label}
+                        </p>
+                        <p className="text-[13px] text-[#8E8E93] mt-0.5">
+                          {slot.time}
+                        </p>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* Step 3: 결제 방법 선택 */}
+        {/* Step 3: 결제 방법 */}
         {currentStep === 3 && (
-          <PaymentMethodSelector
-            onPaymentMethodChange={setPaymentMethod}
-            selectedMethod={paymentMethod}
-          />
-        )}
-      </div>
+          <div className="animate-fade-in-scale" style={{ animationDuration: '300ms' }}>
+            <div className="bg-white px-5 pt-5 pb-6">
+              <h2 className="text-[22px] font-bold text-[#1A1A1A] tracking-[-0.5px] leading-[1.35]">
+                결제는 어떻게<br />진행할까요?
+              </h2>
+              <p className="text-[14px] text-[#8E8E93] tracking-[-0.2px] mt-2">
+                서비스 완료 후 현장에서 결제됩니다
+              </p>
+            </div>
 
-      {/* 하단 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 py-6 bg-white border-t border-gray-200 md:relative md:border-0">
-        {currentStep < 3 ? (
+            <div className="h-2" />
+
+            <div className="bg-white px-5 py-5">
+              <div className="flex items-center gap-2 mb-4">
+                <CreditCard className="w-[18px] h-[18px] text-[#EB5B37]" strokeWidth={2} />
+                <h3 className="text-[15px] font-semibold text-[#1A1A1A] tracking-[-0.3px]">
+                  결제 방법
+                </h3>
+              </div>
+
+              <div className="space-y-2.5">
+                {PAYMENT_METHODS.map((method) => {
+                  const isSelected = paymentMethod === method.id
+                  return (
+                    <button
+                      key={method.id}
+                      onClick={() => setPaymentMethod(method.id)}
+                      className={`w-full flex items-center gap-3.5 p-4 rounded-2xl transition-all duration-200 ${
+                        isSelected
+                          ? 'bg-white ring-[1.5px] ring-[#EB5B37] shadow-[0_2px_16px_rgba(235,91,55,0.08)]'
+                          : 'bg-[#F8F8FA] active:bg-[#F0F0F2]'
+                      }`}
+                    >
+                      <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                        isSelected ? 'border-[#EB5B37] bg-[#EB5B37]' : 'border-[#D1D1D6]'
+                      }`}>
+                        {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                      </div>
+                      <span className="text-[22px]">{method.icon}</span>
+                      <span className={`text-[15px] font-semibold tracking-[-0.3px] ${
+                        isSelected ? 'text-[#1A1A1A]' : 'text-[#3A3A3C]'
+                      }`}>
+                        {method.label}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: 최종 확인 */}
+        {currentStep === 4 && (
+          <div className="animate-fade-in-scale" style={{ animationDuration: '300ms' }}>
+            <div className="bg-white px-5 pt-5 pb-6">
+              <h2 className="text-[22px] font-bold text-[#1A1A1A] tracking-[-0.5px] leading-[1.35]">
+                요청 내용을<br />확인해주세요
+              </h2>
+            </div>
+
+            <div className="h-2" />
+
+            {/* 서비스 정보 */}
+            <div className="bg-white px-5 py-5">
+              <p className="text-[13px] font-medium text-[#8E8E93] tracking-[-0.2px] mb-3">선택한 서비스</p>
+              <p className="text-[15px] font-medium text-[#1A1A1A] tracking-[-0.2px]">
+                {selected !== null && OPTIONS[selected]}
+              </p>
+              {extra.trim() && (
+                <div className="mt-3 pt-3 border-t border-[#F0F0F2]">
+                  <p className="text-[13px] text-[#8E8E93] mb-1">추가 요청사항</p>
+                  <p className="text-[14px] text-[#1A1A1A] tracking-[-0.2px]">{extra}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="h-[1px] bg-[#F0F0F2] mx-5" />
+
+            {/* 방문 일정 */}
+            <div className="bg-white px-5 py-5">
+              <p className="text-[13px] font-medium text-[#8E8E93] tracking-[-0.2px] mb-3">방문 일정</p>
+              {selectedDate && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-[#8E8E93]" />
+                  <span className="text-[15px] text-[#1A1A1A] tracking-[-0.2px]">
+                    {formatDate(selectedDate).month}월 {formatDate(selectedDate).day}일 ({formatDate(selectedDate).weekday}) · {TIME_SLOTS.find(t => t.id === selectedTimeSlot)?.label}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="h-[1px] bg-[#F0F0F2] mx-5" />
+
+            {/* 방문 장소 */}
+            <div className="bg-white px-5 py-5">
+              <p className="text-[13px] font-medium text-[#8E8E93] tracking-[-0.2px] mb-3">방문 장소</p>
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-[#EB5B37]" />
+                <div>
+                  <p className="text-[15px] font-medium text-[#1A1A1A] tracking-[-0.2px]">
+                    {storeName || '가게 미등록'}
+                  </p>
+                  {storeAddress && (
+                    <p className="text-[13px] text-[#8E8E93] mt-0.5">
+                      {storeAddress}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="h-[1px] bg-[#F0F0F2] mx-5" />
+
+            {/* 결제 방법 */}
+            <div className="bg-white px-5 py-5">
+              <p className="text-[13px] font-medium text-[#8E8E93] tracking-[-0.2px] mb-3">결제 방법</p>
+              <p className="text-[15px] text-[#1A1A1A] tracking-[-0.2px]">
+                {PAYMENT_METHODS.find(m => m.id === paymentMethod)?.icon}{' '}
+                {PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label}
+              </p>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* 하단 CTA */}
+      <div className="bottom-cta">
+        {currentStep < 4 ? (
           <Button
-            onClick={handleNextStep}
-            disabled={currentStep === 1 && selected === null}
+            onClick={handleNext}
+            disabled={!canProceed()}
             fullWidth
-            className={currentStep === 1 && selected === null ? 'bg-[#FADCD2] hover:bg-[#FADCD2]' : ''}
           >
             다음
           </Button>
         ) : (
           <Button
             onClick={handleSubmit}
-            disabled={!paymentMethod || loading}
+            disabled={loading}
             fullWidth
-            className={!paymentMethod ? 'bg-[#FADCD2] hover:bg-[#FADCD2]' : ''}
           >
-            {loading ? '신청 중...' : '경보기 교체 신청'}
+            {loading ? '처리 중...' : '서비스 요청하기'}
           </Button>
         )}
       </div>
 
       {/* 완료 모달 */}
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
-        <div className="text-center py-6">
-          <div className="text-6xl mb-4">✅</div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">감사합니다.</h3>
-          <p className="text-[15px] text-gray-600 mb-6">
-            서비스가 성공적으로 접수되었습니다.
-          </p>
-          <Button
-            onClick={() => {
-              setShowModal(false)
-              router.replace('/my-service')
-            }}
-            fullWidth
-          >
-            나의 서비스 확인하기
-          </Button>
-        </div>
-      </Modal>
+      <FeedbackModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        type="success"
+        title="요청이 완료되었어요"
+        description="빠른 시일 내에 연락드릴게요"
+        primaryLabel="나의 서비스 확인하기"
+        primaryAction={() => {
+          router.replace('/my-service')
+        }}
+      />
     </div>
   )
 }

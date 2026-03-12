@@ -4,16 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { toInternational } from '@/utils/format'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { Loading } from '@/components/ui/Loading'
-import Image from 'next/image'
+import { ArrowLeft } from 'lucide-react'
 
 export default function SignupPage() {
   const [phone, setPhone] = useState('')
   const [code, setCode] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [isDemoMode, setIsDemoMode] = useState(false)
   const [error, setError] = useState('')
 
   const router = useRouter()
@@ -36,6 +35,14 @@ export default function SignupPage() {
       setError('전화번호를 입력하세요.')
       return
     }
+
+    // 데모 모드: 형식 검증만 하고 바로 OTP 단계로
+    if (isDemoMode) {
+      setOtpSent(true)
+      setError('')
+      return
+    }
+
     if (!validatePhone(phone)) {
       setError('올바른 휴대폰 번호를 입력하세요.\n예: 01012345678')
       return
@@ -45,7 +52,6 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
-      // 1. 이미 가입된 전화번호인지 profiles에서 조회
       const { data: existUsers, error: existError } = await supabase
         .from('profiles')
         .select('phone')
@@ -61,8 +67,6 @@ export default function SignupPage() {
         return
       }
 
-      // 2. 미가입일 경우에만 인증번호 요청
-      console.log('Sending OTP to:', internationalPhone)
       const { data, error: otpError } = await supabase.auth.signInWithOtp({
         phone: internationalPhone,
         options: {
@@ -93,6 +97,17 @@ export default function SignupPage() {
       setError('전화번호와 인증번호를 모두 입력하세요.')
       return
     }
+
+    // 데모 모드: API 호출 없이 가게 등록 화면으로 이동
+    if (isDemoMode) {
+      localStorage.setItem('demo_mode', 'true')
+      router.replace('/profile/add-store')
+      return
+    }
+
+    // 실제 회원가입 시 데모 모드 해제
+    localStorage.removeItem('demo_mode')
+
     const internationalPhone = toInternational(phone)
     setLoading(true)
     const { error: verifyError } = await supabase.auth.verifyOtp({
@@ -105,7 +120,6 @@ export default function SignupPage() {
     if (verifyError) {
       setError(verifyError.message)
     } else {
-      // 유저 정보 가져오기
       const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) {
@@ -113,7 +127,6 @@ export default function SignupPage() {
         setError('유저 정보를 불러올 수 없습니다.')
         return
       }
-      // 유저 정보를 profiles 테이블에 저장
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -137,93 +150,112 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* 상단 뒤로가기 */}
-      <div className="absolute top-6 left-6 z-10">
-        <button
-          onClick={handleBack}
-          className="flex items-center text-gray-700 hover:text-[#EB5A36] transition-colors"
-        >
-          <svg
-            className="w-5 h-5 mr-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+    <div className="page-without-tabs bg-white">
+      {loading && (
+        <div className="fixed inset-0 bg-white/80 flex items-center justify-center z-[70]">
+          <Loading fullscreen={false} />
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="app-header">
+        <div className="h-[48px] px-4 flex items-center">
+          <button
+            onClick={handleBack}
+            className="w-10 h-10 flex items-center justify-center -ml-1 rounded-full active:bg-[#F5F5F7] transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          로그인 화면으로
-        </button>
+            <ArrowLeft className="w-[22px] h-[22px] text-[#1A1A1A]" strokeWidth={1.8} />
+          </button>
+        </div>
       </div>
 
-      <div className="flex items-center justify-center min-h-screen px-6">
-        <div className="w-full max-w-md">
-          {/* <div className="flex justify-center mb-12">
-            <div className="w-[172.8px] h-[104.6px] relative">
-              <Image
-                src="/images/logo2.png"
-                alt="우리동네가스 로고"
-                fill
-                className="object-contain"
+      <div className="page-content">
+        {/* Title */}
+        <div className="px-5 pt-4 pb-8">
+          <h1 className="text-[26px] font-bold text-[#1A1A1A] tracking-[-0.6px] leading-[1.35]">
+            회원가입
+          </h1>
+          <p className="mt-2 text-[14px] text-[#8E8E93] tracking-[-0.2px]">
+            휴대폰 번호로 간편하게 가입하세요.
+          </p>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mx-5 mb-4 p-3 bg-red-50 rounded-[10px]">
+            <p className="text-[13px] text-red-500 whitespace-pre-line">{error}</p>
+          </div>
+        )}
+
+        {/* Phone Input + Send Button */}
+        <div className="px-5">
+          <div className="flex items-center gap-2.5">
+            <div className="flex-1 h-[52px] bg-[#F5F5F7] rounded-[10px] flex items-center px-4">
+              <input
+                type="text"
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="휴대폰 번호 입력"
+                disabled={otpSent || loading}
+                className="w-full bg-transparent text-[15px] text-[#1A1A1A] placeholder:text-[#C7C7CC] outline-none tracking-[-0.2px]"
               />
             </div>
-          </div> */}
-          <h1 className="text-xl font-bold mb-8 text-center text-black">회원가입</h1>
-
-          {/* 에러 메시지 */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600 whitespace-pre-line">{error}</p>
-            </div>
-          )}
-
-          <Input
-            type="text"
-            placeholder="전화번호 (예: 01012345678)"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            disabled={otpSent}
-            fullWidth
-            className="mb-4"
-          />
-
-          {otpSent && (
-            <Input
-              type="text"
-              placeholder="인증번호 입력"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              disabled={loading}
-              fullWidth
-              className="mb-6"
-            />
-          )}
-
-          {loading && <Loading />}
-
-          {!otpSent ? (
-            <Button
-              onClick={handleSendOtp}
-              disabled={loading}
-              fullWidth
-            >
-              인증번호 보내기
-            </Button>
-          ) : (
-            <Button
-              onClick={handleSignup}
-              disabled={loading}
-              fullWidth
-            >
-              확인
-            </Button>
-          )}
+            {!otpSent && (
+              <button
+                onClick={handleSendOtp}
+                disabled={loading || !phone}
+                className="h-[52px] px-4 rounded-[10px] bg-[#1A1A1A] text-white text-[14px] font-semibold tracking-[-0.2px] whitespace-nowrap disabled:bg-[#E5E5EA] disabled:text-[#C7C7CC] active:bg-[#333] transition-colors flex-shrink-0"
+              >
+                인증번호 발송
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* OTP Input */}
+        {otpSent && (
+          <div className="px-5 pt-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex-1 h-[52px] bg-[#F5F5F7] rounded-[10px] flex items-center px-4">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="인증번호 입력"
+                  disabled={loading}
+                  className="w-full bg-transparent text-[15px] text-[#1A1A1A] placeholder:text-[#C7C7CC] outline-none tracking-[-0.2px]"
+                />
+              </div>
+              <button
+                onClick={handleSignup}
+                disabled={loading || !code}
+                className="h-[52px] px-6 rounded-[10px] bg-[#1A1A1A] text-white text-[14px] font-semibold tracking-[-0.2px] whitespace-nowrap disabled:bg-[#E5E5EA] disabled:text-[#C7C7CC] active:bg-[#333] transition-colors flex-shrink-0"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Demo Mode */}
+        {!isDemoMode ? (
+          <div className="px-5 pt-10">
+            <button
+              onClick={() => { setIsDemoMode(true); setError('') }}
+              className="text-[13px] text-[#C7C7CC] tracking-[-0.2px] underline underline-offset-2 active:text-[#8E8E93] transition-colors"
+            >
+              데모 체험하기
+            </button>
+          </div>
+        ) : (
+          <div className="mx-5 mt-6 p-3 bg-[#F5F5F7] rounded-[10px]">
+            <p className="text-[12px] text-[#8E8E93] tracking-[-0.2px]">
+              데모 모드 - 아무 값이나 입력하여 플로우를 체험하세요.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Loading } from '@/components/ui/Loading'
 import { formatRelativeDate, formatTime } from '@/utils/format'
+import { ArrowLeft } from 'lucide-react'
 
 export default function NotificationPage() {
   const [notifications, setNotifications] = useState<any[]>([])
@@ -160,38 +161,33 @@ export default function NotificationPage() {
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="page-with-tabs bg-white">
       {/* 상단 헤더 */}
-      <header className="pt-6 pb-4 px-5 flex items-center justify-between sticky top-0 bg-white z-10 border-b border-gray-100">
-        <button onClick={() => router.back()} className="p-2 -ml-2">
-          <svg
-            className="w-7 h-7 text-gray-800"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-        <h1 className="text-[22px] font-bold text-gray-800">
-          알림 {unreadCount > 0 && `(${unreadCount})`}
-        </h1>
-        {unreadCount > 0 && (
+      <header className="app-header">
+        <div className="h-[48px] px-4 flex items-center justify-between">
           <button
-            onClick={markAllAsRead}
-            className="text-[14px] text-[#EB5A36] font-medium"
+            onClick={() => router.back()}
+            className="w-10 h-10 flex items-center justify-center -ml-1 rounded-full active:bg-[#F5F5F7] transition-colors"
           >
-            모두 읽음
+            <ArrowLeft className="w-[22px] h-[22px] text-[#1A1A1A]" strokeWidth={1.8} />
           </button>
-        )}
-        {unreadCount === 0 && <div className="w-7" />}
+          <span className="text-[17px] font-semibold text-[#1A1A1A] tracking-[-0.3px]">
+            알림 {unreadCount > 0 && `(${unreadCount})`}
+          </span>
+          {unreadCount > 0 ? (
+            <button
+              onClick={markAllAsRead}
+              className="w-10 flex items-center justify-center text-[14px] text-[#EB5B37] font-medium -mr-1 active:opacity-60 transition-opacity"
+            >
+              읽음
+            </button>
+          ) : (
+            <div className="w-10" />
+          )}
+        </div>
       </header>
 
+      <div className="page-content">
       {/* 알림 리스트 */}
       {loading ? (
         <Loading />
@@ -234,6 +230,7 @@ export default function NotificationPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   )
 }

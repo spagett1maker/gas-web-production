@@ -7,9 +7,9 @@ export const metadata = {
 
 export default function SupportPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-without-tabs bg-gray-50">
       {/* 헤더 */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="app-header">
         <div className="max-w-3xl mx-auto px-6 py-8">
           <div className="flex items-center justify-center mb-4">
             <div className="relative w-20 h-20">
@@ -31,7 +31,7 @@ export default function SupportPage() {
       </header>
 
       {/* 본문 */}
-      <main className="max-w-3xl mx-auto px-6 py-12">
+      <main className="max-w-3xl mx-auto px-6 py-12 page-content">
         {/* 자주 묻는 질문 */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">자주 묻는 질문</h2>

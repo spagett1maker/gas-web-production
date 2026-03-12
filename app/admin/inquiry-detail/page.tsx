@@ -264,9 +264,10 @@ function AdminInquiryDetailContent() {
     PRIORITY_COLORS[inquiry.priority as keyof typeof PRIORITY_COLORS]
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="page-without-tabs bg-gray-50">
       {/* 상단 헤더 */}
-      <header className="pt-6 pb-4 px-5 flex items-center justify-between bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="app-header">
+        <div className="h-[52px] px-5 flex items-center justify-between">
         <button onClick={() => router.back()} className="p-2 -ml-2">
           <svg
             className="w-7 h-7 text-gray-800"
@@ -284,9 +285,10 @@ function AdminInquiryDetailContent() {
         </button>
         <h1 className="text-[22px] font-bold text-gray-800">문의 관리</h1>
         <div className="w-7" />
+        </div>
       </header>
 
-      <div className="px-5 py-6 space-y-4">
+      <div className="page-content px-5 py-6 space-y-4">
         {/* 문의글 정보 */}
         <Card>
           <CardBody>
@@ -305,7 +307,7 @@ function AdminInquiryDetailContent() {
                       onClick={() => updateStatus(status)}
                       className={`px-3 py-2 rounded-full border text-[12px] font-medium whitespace-nowrap ${
                         inquiry.status === status
-                          ? 'border-[#EB5A36]'
+                          ? 'border-[#EB5B37]'
                           : 'border-gray-300'
                       }`}
                       style={{
@@ -421,7 +423,7 @@ function AdminInquiryDetailContent() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center">
                         <svg
-                          className="w-5 h-5 text-[#EB5A36] mr-2"
+                          className="w-5 h-5 text-[#EB5B37] mr-2"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -433,7 +435,7 @@ function AdminInquiryDetailContent() {
                             d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span className="text-[#EB5A36] font-medium text-[14px]">
+                        <span className="text-[#EB5B37] font-medium text-[14px]">
                           관리자
                         </span>
                       </div>
@@ -477,7 +479,7 @@ function AdminInquiryDetailContent() {
                 fullWidth
                 className={
                   submitting || !responseText.trim()
-                    ? 'bg-[#FADCD2] hover:bg-[#FADCD2]'
+                    ? 'bg-[#FDDED5] hover:bg-[#FDDED5]'
                     : ''
                 }
               >
@@ -493,7 +495,7 @@ function AdminInquiryDetailContent() {
 
 export default function AdminInquiryDetailPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#EB5A36]" /></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#EB5B37]" /></div>}>
       <AdminInquiryDetailContent />
     </Suspense>
   )

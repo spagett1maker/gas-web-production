@@ -50,7 +50,7 @@ export default function PaymentMethodSelector({
             onClick={() => onPaymentMethodChange(method.id)}
             className={`w-full flex items-start rounded-xl px-4 py-4 border-2 transition-all ${
               isSelected
-                ? 'border-[#EB5A36] bg-[#FFF8F6]'
+                ? 'border-[#EB5B37] bg-[#FFF8F6]'
                 : 'border-gray-200 bg-white hover:border-gray-300'
             }`}
           >
@@ -59,18 +59,18 @@ export default function PaymentMethodSelector({
               <div className="flex items-center justify-between mb-1">
                 <p
                   className={`text-[15px] font-bold ${
-                    isSelected ? 'text-[#EB5A36]' : 'text-gray-800'
+                    isSelected ? 'text-[#EB5B37]' : 'text-gray-800'
                   }`}
                 >
                   {method.name}
                 </p>
                 <div
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    isSelected ? 'border-[#EB5A36]' : 'border-gray-300'
+                    isSelected ? 'border-[#EB5B37]' : 'border-gray-300'
                   }`}
                 >
                   {isSelected && (
-                    <div className="w-3 h-3 rounded-full bg-[#EB5A36]" />
+                    <div className="w-3 h-3 rounded-full bg-[#EB5B37]" />
                   )}
                 </div>
               </div>

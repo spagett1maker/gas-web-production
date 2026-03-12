@@ -38,28 +38,31 @@ export default function AdminStorePage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="page-without-tabs bg-white">
       {/* 상단 헤더 */}
-      <header className="pt-6 pb-4 px-5 flex items-center justify-between sticky top-0 bg-white z-10 border-b border-gray-100">
-        <button onClick={() => router.back()} className="p-2 -ml-2">
-          <svg
-            className="w-7 h-7 text-gray-800"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-        <h1 className="text-[22px] font-bold text-gray-800">가게 관리</h1>
-        <div className="w-7" />
+      <header className="app-header">
+        <div className="h-[52px] px-5 flex items-center justify-between">
+          <button onClick={() => router.back()} className="p-2 -ml-2">
+            <svg
+              className="w-7 h-7 text-gray-800"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          <h1 className="text-[22px] font-bold text-gray-800">가게 관리</h1>
+          <div className="w-7" />
+        </div>
       </header>
 
+      <div className="page-content">
       {/* 가게 리스트 */}
       {loading ? (
         <Loading />
@@ -76,7 +79,7 @@ export default function AdminStorePage() {
                 <button
                   key={store.id}
                   onClick={() => router.push(`/admin/store/detail?id=${store.id}`)}
-                  className="w-full bg-white border border-gray-200 rounded-2xl p-4 hover:border-[#EB5A36] transition-colors text-left"
+                  className="w-full bg-white border border-gray-200 rounded-2xl p-4 hover:border-[#EB5B37] transition-colors text-left"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -105,6 +108,7 @@ export default function AdminStorePage() {
           )}
         </div>
       )}
+      </div>
     </div>
   )
 }

@@ -1,51 +1,52 @@
 import { cn } from '@/lib/utils'
+import { Clock, Loader2, CheckCircle, XCircle, LucideIcon } from 'lucide-react'
 
 interface StatusBadgeProps {
   status: string
   className?: string
+  showIcon?: boolean
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { bg: string; text: string; icon: LucideIcon; animate?: boolean }> = {
   '요청됨': {
-    bg: 'bg-blue-50',
-    text: 'text-blue-700',
-    border: 'border-blue-200',
-    dot: 'bg-blue-500',
+    bg: 'bg-[#FEF2EE]',
+    text: 'text-[#EB5B37]',
+    icon: Clock,
   },
   '진행중': {
-    bg: 'bg-amber-50',
-    text: 'text-amber-700',
-    border: 'border-amber-200',
-    dot: 'bg-amber-500',
+    bg: 'bg-[#EFF6FF]',
+    text: 'text-[#3B82F6]',
+    icon: Loader2,
+    animate: true,
   },
   '완료': {
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-700',
-    border: 'border-emerald-200',
-    dot: 'bg-emerald-500',
+    bg: 'bg-[#F0FDF4]',
+    text: 'text-[#22C55E]',
+    icon: CheckCircle,
   },
   '취소': {
-    bg: 'bg-slate-50',
-    text: 'text-slate-700',
-    border: 'border-slate-200',
-    dot: 'bg-slate-500',
+    bg: 'bg-[#FEF2F2]',
+    text: 'text-[#EF4444]',
+    icon: XCircle,
   },
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig['요청됨']
+export function StatusBadge({ status, className, showIcon = true }: StatusBadgeProps) {
+  const config = statusConfig[status] || statusConfig['요청됨']
+  const Icon = config.icon
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border',
+        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-bold tracking-[-0.2px]',
         config.bg,
         config.text,
-        config.border,
         className
       )}
     >
-      <div className={cn('w-1.5 h-1.5 rounded-full', config.dot)}></div>
+      {showIcon && (
+        <Icon className={cn('w-3.5 h-3.5', config.animate && 'animate-spin')} strokeWidth={2.5} />
+      )}
       {status}
     </span>
   )

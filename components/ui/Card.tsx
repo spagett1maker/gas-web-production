@@ -1,40 +1,67 @@
-import { ReactNode, HTMLAttributes } from 'react'
+import { ReactNode, HTMLAttributes, forwardRef } from 'react'
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode
-  variant?: 'default' | 'elevated' | 'outlined'
+  variant?: 'default' | 'elevated' | 'interactive'
+  padding?: 'none' | 'sm' | 'md' | 'lg'
 }
 
-export const Card = ({ children, variant = 'default', className = '', ...props }: CardProps) => {
-  const variantStyles = {
-    default: 'bg-white rounded-2xl shadow-sm border border-[var(--color-border)]',
-    elevated: 'bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow',
-    outlined: 'bg-white rounded-2xl border-2 border-[var(--color-border)]',
+export const Card = forwardRef<HTMLDivElement, CardProps>(
+  ({ children, variant = 'default', padding = 'md', className = '', ...props }, ref) => {
+    // 디자인 시스템 스펙:
+    // Default: 16px radius, shadow 0 1px 4px, padding 16px
+    // Elevated: 20px radius, shadow 0 4px 16px, padding 20px
+    // Interactive: Default + 터치 피드백
+    const variantStyles = {
+      default: 'bg-white rounded-2xl shadow-[0_1px_4px_rgba(0,0,0,0.04)]',
+      elevated: 'bg-white rounded-[20px] shadow-[0_4px_16px_rgba(0,0,0,0.08)]',
+      interactive: 'bg-white rounded-2xl shadow-[0_1px_4px_rgba(0,0,0,0.04)] active:bg-[#F9F9F9] active:scale-[0.98] transition-all duration-150 cursor-pointer',
+    }
+
+    const paddingStyles = {
+      none: '',
+      sm: 'p-3',
+      md: 'p-4',
+      lg: 'p-5',
+    }
+
+    return (
+      <div
+        ref={ref}
+        className={`${variantStyles[variant]} ${paddingStyles[padding]} ${className}`}
+        {...props}
+      >
+        {children}
+      </div>
+    )
   }
+)
 
-  return (
-    <div
-      className={`${variantStyles[variant]} ${className}`}
-      {...props}
-    >
-      {children}
-    </div>
-  )
-}
+Card.displayName = 'Card'
 
+// 카드 헤더
 interface CardHeaderProps {
   children: ReactNode
   className?: string
+  action?: ReactNode
 }
 
-export const CardHeader = ({ children, className = '' }: CardHeaderProps) => {
+export const CardHeader = ({ children, className = '', action }: CardHeaderProps) => {
   return (
-    <div className={`px-6 py-4 border-b border-[var(--color-border)] ${className}`}>
-      {children}
+    <div className={`flex items-center justify-between mb-3 ${className}`}>
+      <h3 className="text-[15px] font-semibold text-[#1A1A1A] tracking-[-0.3px]">
+        {children}
+      </h3>
+      {action && (
+        <div className="text-[13px] text-[#8E8E93]">
+          {action}
+        </div>
+      )}
     </div>
   )
 }
 
+// 카드 바디
 interface CardBodyProps {
   children: ReactNode
   className?: string
@@ -42,12 +69,13 @@ interface CardBodyProps {
 
 export const CardBody = ({ children, className = '' }: CardBodyProps) => {
   return (
-    <div className={`px-6 py-5 ${className}`}>
+    <div className={className}>
       {children}
     </div>
   )
 }
 
+// 카드 푸터
 interface CardFooterProps {
   children: ReactNode
   className?: string
@@ -55,11 +83,10 @@ interface CardFooterProps {
 
 export const CardFooter = ({ children, className = '' }: CardFooterProps) => {
   return (
-    <div className={`px-6 py-4 border-t border-[var(--color-border)] ${className}`}>
+    <div className={`mt-3 pt-3 border-t border-[#F2F2F7] ${className}`}>
       {children}
     </div>
   )
 }
 
-// CardContent alias for CardBody (for compatibility with gas-dashboard style)
 export const CardContent = CardBody

@@ -4,10 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { toInternational } from '@/utils/format'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { Loading } from '@/components/ui/Loading'
-import Image from 'next/image'
+import { ArrowLeft, ChevronRight } from 'lucide-react'
 
 const ADMIN_EMAIL = 'GAS@gas.com'
 
@@ -24,11 +22,11 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [isAdminFlow, setIsAdminFlow] = useState(false)
+  const [isDemoMode, setIsDemoMode] = useState(false)
   const [error, setError] = useState('')
 
   const router = useRouter()
 
-  // 입력값이 바뀔 때마다 state 초기화
   const handleInputChange = (text: string) => {
     setPhoneOrEmail(text)
     setIsAdminFlow(false)
@@ -38,36 +36,38 @@ export default function LoginPage() {
     setError('')
   }
 
-  // "인증번호 보내기" or "비밀번호 입력" 분기
   const handleSendOtpOrPassword = async () => {
     if (!phoneOrEmail) {
       setError('전화번호를 입력하세요.')
       return
     }
 
-    if (phoneOrEmail.includes('@')) {
-      // 이메일이면 관리자 로그인 플로우
-      setIsAdminFlow(true)
-      setOtpSent(true) // 비밀번호 입력창 띄움
+    // 데모 모드: API 호출 없이 바로 OTP 입력 단계로
+    if (isDemoMode) {
+      if (phoneOrEmail.includes('@')) {
+        setIsAdminFlow(true)
+      }
+      setOtpSent(true)
       return
     }
 
-    // 일반 유저: 휴대폰 로그인
+    if (phoneOrEmail.includes('@')) {
+      setIsAdminFlow(true)
+      setOtpSent(true)
+      return
+    }
+
     const internationalPhone = toInternational(phoneOrEmail)
     const inputPhoneNormalized = phoneOrEmail.replace(/-/g, '')
 
-    // 데모 계정 체크 (App Store 심사용) - 가장 먼저 확인
     if (inputPhoneNormalized === DEMO_PHONE && DEMO_EMAIL && DEMO_PASSWORD) {
-      // 데모 계정은 실제 SMS 발송 없이 바로 OTP 입력 화면으로
       setOtpSent(true)
-      alert('인증번호가 전송되었습니다.')
       return
     }
 
     setLoading(true)
 
     try {
-      // 1. 먼저 등록된 전화번호인지 확인
       const { data: existingUsers, error: checkError } = await supabase
         .from('profiles')
         .select('phone')
@@ -79,14 +79,12 @@ export default function LoginPage() {
         return
       }
 
-      // 2. 등록되지 않은 전화번호면 에러
       if (!existingUsers || existingUsers.length === 0) {
         setLoading(false)
         setError('등록되지 않은 전화번호입니다.\n회원가입을 먼저 진행해주세요.')
         return
       }
 
-      // 3. 등록된 전화번호이면 OTP 발송
       const { error: otpError } = await supabase.auth.signInWithOtp({
         phone: internationalPhone
       })
@@ -97,7 +95,6 @@ export default function LoginPage() {
         setError(otpError.message)
       } else {
         setOtpSent(true)
-        alert('인증번호가 전송되었습니다.')
       }
     } catch (err) {
       console.error('Login check error:', err)
@@ -106,10 +103,23 @@ export default function LoginPage() {
     }
   }
 
-  // "확인" 클릭시
   const handleLogin = async () => {
+    // 데모 모드: API 호출 없이 바로 홈으로 이동
+    if (isDemoMode) {
+      if (isAdminFlow) {
+        if (!password) { setError('비밀번호를 입력하세요.'); return }
+      } else {
+        if (!code) { setError('인증번호를 입력하세요.'); return }
+      }
+      localStorage.setItem('demo_mode', 'true')
+      router.replace('/home')
+      return
+    }
+
+    // 실제 로그인 시 데모 모드 해제
+    localStorage.removeItem('demo_mode')
+
     if (isAdminFlow) {
-      // 관리자: 이메일+비번 로그인
       if (!password) {
         setError('비밀번호를 입력하세요.')
         return
@@ -126,7 +136,6 @@ export default function LoginPage() {
         return
       }
 
-      // 프로필 role 검사
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
@@ -145,7 +154,6 @@ export default function LoginPage() {
       return
     }
 
-    // 일반 유저: OTP 인증
     const internationalPhone = toInternational(phoneOrEmail)
     if (!code) {
       setError('인증번호를 입력하세요.')
@@ -153,14 +161,12 @@ export default function LoginPage() {
     }
     setLoading(true)
 
-    // 데모 계정 처리 (App Store 심사용)
     const inputPhoneNormalized = phoneOrEmail.replace(/-/g, '')
     const isDemoAccount = inputPhoneNormalized === DEMO_PHONE && code === DEMO_OTP
 
     let userId: string | undefined
 
     if (isDemoAccount && DEMO_EMAIL && DEMO_PASSWORD) {
-      // 데모 계정: 고정 OTP 코드로 이메일/비밀번호 로그인
       const { data: demoData, error: demoError } = await supabase.auth.signInWithPassword({
         email: DEMO_EMAIL,
         password: DEMO_PASSWORD,
@@ -173,7 +179,6 @@ export default function LoginPage() {
       }
       userId = demoData?.user?.id
     } else {
-      // 일반 계정: Supabase OTP 검증
       const { data, error: verifyError } = await supabase.auth.verifyOtp({
         phone: internationalPhone,
         token: code,
@@ -185,7 +190,6 @@ export default function LoginPage() {
         setError(verifyError.message)
         return
       }
-      // verifyOtp 응답에서 직접 세션/유저 정보 가져오기
       userId = data?.user?.id || data?.session?.user?.id
     }
 
@@ -194,7 +198,6 @@ export default function LoginPage() {
       return
     }
 
-    // profiles에서 role 체크
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
@@ -210,7 +213,6 @@ export default function LoginPage() {
       return
     }
 
-    // 유저: 가게 정보 체크 후 라우팅
     const { data: stores, error: storeError } = await supabase
       .from('stores')
       .select('*')
@@ -223,109 +225,154 @@ export default function LoginPage() {
     if (!stores || stores.length === 0) {
       router.replace('/profile/add-store')
     } else {
-      router.replace('/')
+      router.replace('/home')
     }
   }
 
-  const handleSignup = () => {
-    router.push('/signup')
-  }
-
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-6">
-      <div className="w-full max-w-md">
-        {/* 로고 */}
-        <div className="flex justify-center mb-12">
-          <div className="w-[172.8px] h-[104.6px] relative">
-            <Image
-              src="/images/logo2.png"
-              alt="우리동네가스 로고"
-              fill
-              className="object-contain"
-            />
-          </div>
+    <div className="page-without-tabs bg-white">
+      {loading && (
+        <div className="fixed inset-0 bg-white/80 flex items-center justify-center z-[70]">
+          <Loading fullscreen={false} />
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="app-header">
+        <div className="h-[48px] px-4 flex items-center justify-between">
+          <button
+            onClick={() => router.back()}
+            className="w-10 h-10 flex items-center justify-center -ml-1 rounded-full active:bg-[#F5F5F7] transition-colors"
+          >
+            <ArrowLeft className="w-[22px] h-[22px] text-[#1A1A1A]" strokeWidth={1.8} />
+          </button>
+          <div className="w-10" />
+        </div>
+      </div>
+
+      <div className="page-content">
+        {/* Title */}
+        <div className="px-5 pt-4 pb-8">
+          <h1 className="text-[26px] font-bold text-[#1A1A1A] tracking-[-0.6px] leading-[1.35]">
+            반가워요!<br />
+            본인확인을 해주세요.
+          </h1>
         </div>
 
-        {/* 에러 메시지 */}
+        {/* Error */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mx-5 mb-4 p-3 bg-red-50 rounded-[10px]">
+            <p className="text-[13px] text-red-500 whitespace-pre-line">{error}</p>
           </div>
         )}
 
-        {/* 전화번호/이메일 입력창 */}
-        <Input
-          type="text"
-          placeholder="전화번호 (예: 01012345678)"
-          value={phoneOrEmail}
-          onChange={(e) => handleInputChange(e.target.value)}
-          disabled={loading}
-          fullWidth
-          className="mb-4"
-        />
-
-        {/* 입력창(OTP/비밀번호) 분기 */}
-        {otpSent && (
-          isAdminFlow ? (
-            <Input
-              type="password"
-              placeholder="비밀번호를 입력하세요."
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              fullWidth
-              className="mb-6"
-            />
-          ) : (
-            <Input
-              type="text"
-              placeholder="인증번호 입력"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              disabled={loading}
-              fullWidth
-              className="mb-6"
-            />
-          )
-        )}
-
-        {loading && <Loading />}
-
-        {/* 버튼 */}
-        {!otpSent ? (
-          <Button
-            onClick={handleSendOtpOrPassword}
-            disabled={loading}
-            fullWidth
-            className="mb-4"
-          >
-            인증번호 보내기
-          </Button>
-        ) : (
-          <Button
-            onClick={handleLogin}
-            disabled={loading}
-            fullWidth
-            className="mb-4"
-          >
-            확인
-          </Button>
-        )}
-
-        {/* 구분선 */}
-        <div className="flex items-center my-6">
-          <div className="flex-1 h-px bg-gray-300" />
-          <span className="px-3 text-gray-500 text-sm">또는</span>
-          <div className="flex-1 h-px bg-gray-300" />
+        {/* Phone Input + Send Button */}
+        <div className="px-5">
+          <div className="flex items-center gap-2.5">
+            <div className="flex-1 h-[52px] bg-[#F5F5F7] rounded-[10px] flex items-center px-4">
+              <input
+                type="text"
+                inputMode={phoneOrEmail.includes('@') ? 'email' : 'tel'}
+                value={phoneOrEmail}
+                onChange={e => handleInputChange(e.target.value)}
+                placeholder="휴대폰 번호 입력"
+                disabled={loading}
+                className="w-full bg-transparent text-[15px] text-[#1A1A1A] placeholder:text-[#C7C7CC] outline-none tracking-[-0.2px]"
+              />
+            </div>
+            {!otpSent && (
+              <button
+                onClick={handleSendOtpOrPassword}
+                disabled={loading || !phoneOrEmail}
+                className="h-[52px] px-4 rounded-[10px] bg-[#1A1A1A] text-white text-[14px] font-semibold tracking-[-0.2px] whitespace-nowrap disabled:bg-[#E5E5EA] disabled:text-[#C7C7CC] active:bg-[#333] transition-colors flex-shrink-0"
+              >
+                인증번호 발송
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* 회원가입 버튼 */}
-        <button
-          onClick={handleSignup}
-          className="w-full py-3 text-center text-gray-700 font-medium hover:text-[#EB5A36] transition-colors"
-        >
-          회원가입
-        </button>
+        {/* OTP / Password Input */}
+        {otpSent && (
+          <div className="px-5 pt-3">
+            {isAdminFlow ? (
+              <div className="flex items-center gap-2.5">
+                <div className="flex-1 h-[52px] bg-[#F5F5F7] rounded-[10px] flex items-center px-4">
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="비밀번호를 입력하세요"
+                    disabled={loading}
+                    className="w-full bg-transparent text-[15px] text-[#1A1A1A] placeholder:text-[#C7C7CC] outline-none tracking-[-0.2px]"
+                  />
+                </div>
+                <button
+                  onClick={handleLogin}
+                  disabled={loading || !password}
+                  className="h-[52px] px-6 rounded-[10px] bg-[#1A1A1A] text-white text-[14px] font-semibold tracking-[-0.2px] whitespace-nowrap disabled:bg-[#E5E5EA] disabled:text-[#C7C7CC] active:bg-[#333] transition-colors flex-shrink-0"
+                >
+                  확인
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2.5">
+                <div className="flex-1 h-[52px] bg-[#F5F5F7] rounded-[10px] flex items-center px-4">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={code}
+                    onChange={e => setCode(e.target.value)}
+                    placeholder="인증번호 입력"
+                    disabled={loading}
+                    className="w-full bg-transparent text-[15px] text-[#1A1A1A] placeholder:text-[#C7C7CC] outline-none tracking-[-0.2px]"
+                  />
+                </div>
+                <button
+                  onClick={handleLogin}
+                  disabled={loading || !code}
+                  className="h-[52px] px-6 rounded-[10px] bg-[#1A1A1A] text-white text-[14px] font-semibold tracking-[-0.2px] whitespace-nowrap disabled:bg-[#E5E5EA] disabled:text-[#C7C7CC] active:bg-[#333] transition-colors flex-shrink-0"
+                >
+                  확인
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Signup Link */}
+        <div className="px-5 pt-6">
+          <button
+            onClick={() => router.push('/signup')}
+            className="flex items-center gap-1 active:opacity-60 transition-opacity"
+          >
+            <span className="text-[14px] text-[#8E8E93] tracking-[-0.2px]">
+              아직 회원이 아니신가요?
+            </span>
+            <span className="text-[14px] font-semibold text-[#EB5B37] tracking-[-0.2px]">
+              회원가입
+            </span>
+            <ChevronRight className="w-3.5 h-3.5 text-[#EB5B37]" />
+          </button>
+        </div>
+
+        {/* Demo Mode */}
+        {!isDemoMode ? (
+          <div className="px-5 pt-10">
+            <button
+              onClick={() => { setIsDemoMode(true); setError('') }}
+              className="text-[13px] text-[#C7C7CC] tracking-[-0.2px] underline underline-offset-2 active:text-[#8E8E93] transition-colors"
+            >
+              데모 체험하기
+            </button>
+          </div>
+        ) : (
+          <div className="mx-5 mt-6 p-3 bg-[#F5F5F7] rounded-[10px]">
+            <p className="text-[12px] text-[#8E8E93] tracking-[-0.2px]">
+              데모 모드 - 아무 값이나 입력하여 플로우를 체험하세요.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

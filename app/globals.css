@@ -1,62 +1,142 @@
 @import "tailwindcss";
 
 :root {
-  /* Colors */
-  --color-primary: #EB5A36;
-  --color-primary-hover: #FF5A36;
-  --color-primary-light: #FFF5F3;
-  --color-primary-dark: #D54D2B;
+  /* ==========================================
+     DESIGN SYSTEM - Coral Orange & Gray (Korean Style)
+     Primary: #EB5B37
+     ========================================== */
+
+  /* Primary Colors - Coral Orange (가스/화염 연상) */
+  --color-primary-50: #FEF2EE;
+  --color-primary-100: #FDDED5;
+  --color-primary-200: #FBC5B7;
+  --color-primary-300: #F7A08A;
+  --color-primary-400: #F07B5A;
+  --color-primary: #EB5B37;
+  --color-primary-600: #D9482A;
+  --color-primary-700: #B83A20;
+  --color-primary-800: #952F1A;
+
+  /* Legacy aliases */
+  --color-primary-hover: #D9482A;
+  --color-primary-light: #FEF2EE;
+  --color-primary-dark: #B83A20;
+
+  /* Neutral Colors - Gray (토스 스타일) */
+  --color-gray-50: #FAFAFA;
+  --color-gray-100: #F5F5F7;  /* 서피스 */
+  --color-gray-200: #E5E5EA;  /* 보더 */
+  --color-gray-300: #D1D1D6;
+  --color-gray-400: #C7C7CC;
+  --color-gray-500: #8E8E93;  /* 서브 텍스트 */
+  --color-gray-600: #636366;
+  --color-gray-700: #48484A;
+  --color-gray-800: #3A3A3C;
+  --color-gray-900: #1A1A1A;  /* 메인 텍스트 */
 
   /* Backgrounds */
   --color-background: #FFFFFF;
-  --color-surface: #F6F6F6;
-  --color-surface-hover: #EEEEEE;
+  --color-surface: var(--color-gray-50);
+  --color-surface-hover: var(--color-gray-100);
+  --color-surface-elevated: #FFFFFF;
 
   /* Text */
-  --color-text-primary: #1F2937;
-  --color-text-secondary: #6B7280;
-  --color-text-tertiary: #9CA3AF;
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-600);
+  --color-text-tertiary: var(--color-gray-400);
+  --color-text-inverse: #FFFFFF;
 
   /* Borders */
-  --color-border: #E5E7EB;
+  --color-border: var(--color-gray-200);
+  --color-border-light: var(--color-gray-100);
   --color-border-focus: var(--color-primary);
 
   /* Status colors */
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
+  --color-success: #22C55E;
+  --color-success-light: #DCFCE7;
+  --color-warning: #EAB308;
+  --color-warning-light: #FEF9C3;
   --color-error: #EF4444;
+  --color-error-light: #FEE2E2;
   --color-info: #3B82F6;
+  --color-info-light: #DBEAFE;
 
-  /* Spacing scale */
-  --spacing-xs: 0.5rem;    /* 8px */
-  --spacing-sm: 0.75rem;   /* 12px */
-  --spacing-md: 1rem;      /* 16px */
-  --spacing-lg: 1.5rem;    /* 24px */
-  --spacing-xl: 2rem;      /* 32px */
-  --spacing-2xl: 3rem;     /* 48px */
+  /* 8px Grid Spacing System */
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Legacy spacing aliases */
+  --spacing-xs: var(--space-2);
+  --spacing-sm: var(--space-3);
+  --spacing-md: var(--space-4);
+  --spacing-lg: var(--space-6);
+  --spacing-xl: var(--space-8);
+  --spacing-2xl: var(--space-12);
 
   /* Border radius */
-  --radius-sm: 0.5rem;     /* 8px */
-  --radius-md: 0.75rem;    /* 12px */
-  --radius-lg: 1rem;       /* 16px */
-  --radius-xl: 1.5rem;     /* 24px */
-  --radius-2xl: 1.75rem;   /* 28px */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
 
-  /* Typography */
-  --font-size-xs: 0.75rem;    /* 12px */
-  --font-size-sm: 0.875rem;   /* 14px */
-  --font-size-base: 1rem;     /* 16px */
-  --font-size-lg: 1.125rem;   /* 18px */
-  --font-size-xl: 1.25rem;    /* 20px */
-  --font-size-2xl: 1.5rem;    /* 24px */
-  --font-size-3xl: 1.875rem;  /* 30px */
+  /* Typography Scale (디자인 시스템 스펙)
+     Display: 28px Bold - 메인 숫자, 금액
+     Title: 22px Bold - 페이지 타이틀
+     Heading: 17px Semibold - 섹션 제목
+     Body: 15px Regular - 본문
+     Caption: 13px Regular - 설명, 날짜
+     Small: 12px Medium - 뱃지, 태그
+  */
+  --font-size-xs: 12px;   /* Small */
+  --font-size-sm: 13px;   /* Caption */
+  --font-size-base: 15px; /* Body */
+  --font-size-lg: 17px;   /* Heading */
+  --font-size-xl: 22px;   /* Title */
+  --font-size-2xl: 28px;  /* Display */
+  --font-size-3xl: 32px;
+  --font-size-4xl: 36px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  /* Line Heights */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+
+  /* Shadows (refined) */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.1);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* Component specific (디자인 시스템 스펙) */
+  --card-radius: var(--radius-lg);      /* 16px */
+  --button-radius: var(--radius-md);    /* 12px */
+  --input-radius: var(--radius-md);     /* 12px */
+
+  /* 버튼 높이 */
+  --button-height-lg: 52px;   /* BottomCTA, 주요 액션 */
+  --button-height-md: 44px;   /* 일반 버튼 */
+  --button-height-sm: 36px;   /* 인라인 버튼 */
+  --button-height-xs: 28px;   /* 태그, 필터 */
 }
 
 @theme inline {
@@ -83,11 +163,12 @@
 body {
   background: var(--color-background);
   color: var(--color-text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
   font-size: var(--font-size-base);
-  line-height: 1.5;
+  line-height: var(--line-height-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
 }
 
 /* Utility classes */
@@ -119,41 +200,100 @@ body {
   border-color: var(--color-primary);
 }
 
-/* Typography utilities */
-.heading-1 {
+/* ==========================================
+   Typography Utilities (Toss-style)
+   ========================================== */
+
+/* Display - 메인 타이틀 */
+.text-display {
+  font-size: var(--font-size-4xl);
+  font-weight: 700;
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.02em;
+}
+
+/* Title - 페이지/섹션 타이틀 */
+.text-title {
   font-size: var(--font-size-2xl);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.01em;
+}
+
+/* Heading - 카드 제목 */
+.text-heading {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  line-height: var(--line-height-normal);
+}
+
+/* Body Large */
+.text-body-lg {
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  line-height: var(--line-height-relaxed);
+}
+
+/* Body - 본문 기본 */
+.text-body {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  line-height: var(--line-height-relaxed);
+}
+
+/* Caption - 설명 */
+.text-caption {
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  line-height: var(--line-height-normal);
+  color: var(--color-text-secondary);
+}
+
+/* Label - 버튼, 뱃지 */
+.text-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Legacy aliases */
+.heading-1 {
+  font-size: var(--font-size-4xl);
+  font-weight: 700;
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.02em;
 }
 
 .heading-2 {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-2xl);
   font-weight: 700;
-  line-height: 1.3;
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.01em;
 }
 
 .heading-3 {
   font-size: var(--font-size-lg);
   font-weight: 600;
-  line-height: 1.4;
+  line-height: var(--line-height-normal);
 }
 
 .body {
   font-size: var(--font-size-base);
   font-weight: 400;
-  line-height: 1.5;
+  line-height: var(--line-height-relaxed);
 }
 
 .body-sm {
   font-size: var(--font-size-sm);
   font-weight: 400;
-  line-height: 1.5;
+  line-height: var(--line-height-relaxed);
 }
 
 .caption {
   font-size: var(--font-size-xs);
   font-weight: 400;
-  line-height: 1.5;
+  line-height: var(--line-height-normal);
+  color: var(--color-text-secondary);
 }
 
 /* Scrollbar hide utility */
@@ -164,4 +304,865 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* ========================================
+   Safe Area & Layout Utilities
+   ========================================
+   Z-Index Hierarchy:
+     z-[80]: Toast, ToastFeedback (최상위 알림)
+     z-[70]: Modal, FeedbackModal (오버레이)
+     z-[60]: BottomSheet (바텀시트)
+     z-50:   TabBar (고정 네비게이션)
+     z-[45]: BottomCTA (하단 액션 버튼)
+     z-40:   Sticky Header (고정 헤더)
+     z-30:   Admin Header
+   ======================================== */
+
+/* CSS Variables for consistent spacing */
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+
+  /* Tab bar height: 62px content + safe area bottom */
+  --tab-bar-height: calc(62px + var(--safe-area-bottom));
+
+  /* Header heights */
+  --header-height: 56px;
+  --header-height-with-safe: calc(var(--header-height) + var(--safe-area-top));
+}
+
+/* Safe Area padding utilities */
+.safe-top {
+  padding-top: var(--safe-area-top);
+}
+
+.safe-bottom {
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.safe-left {
+  padding-left: var(--safe-area-left);
+}
+
+.safe-right {
+  padding-right: var(--safe-area-right);
+}
+
+.safe-x {
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
+}
+
+.safe-y {
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.safe-all {
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
+}
+
+/* ==========================================
+   Page Layout Patterns
+   ==========================================
+   Standard structure:
+     <div class="page-with-tabs"> or <div class="page-without-tabs">
+       <header class="app-header">...</header>
+       <main class="page-content">scrollable content</main>
+       <div class="page-bottom">fixed bottom buttons (optional)</div>
+     </div>
+   ========================================== */
+
+/* Page containers */
+.page-with-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding-bottom: var(--tab-bar-height);
+}
+
+.page-without-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+/* Header - sits above scrollable content in flex layout */
+.app-header {
+  flex-shrink: 0;
+  z-index: 40;
+  padding-top: var(--safe-area-top);
+  background: white;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+}
+
+/* Legacy header utilities (kept for compatibility) */
+.header-safe {
+  padding-top: calc(var(--safe-area-top) + 12px);
+}
+
+.sticky-header-safe {
+  flex-shrink: 0;
+  padding-top: calc(var(--safe-area-top) + 12px);
+  z-index: 40;
+  background: white;
+}
+
+/* Scrollable content area - fills remaining space */
+.page-content {
+  flex: 1;
+  min-height: 0;  /* flex 자식이 콘텐츠보다 작아질 수 있게 허용 */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Fixed bottom area (for CTA buttons on pages without tab bar) */
+.page-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  padding: 12px 20px;
+  padding-bottom: calc(12px + var(--safe-area-bottom));
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Fixed bottom area on pages WITH tab bar */
+.page-bottom-with-tabs {
+  position: fixed;
+  bottom: var(--tab-bar-height);
+  left: 0;
+  right: 0;
+  z-index: 45;
+  padding: 12px 20px;
+  background: white;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Spacer to prevent content from hiding behind fixed bottom */
+.bottom-spacer {
+  height: calc(100px + var(--safe-area-bottom));
+  flex-shrink: 0;
+}
+
+.bottom-spacer-with-tabs {
+  height: 76px;
+  flex-shrink: 0;
+}
+
+/* Fixed bottom element positioning */
+.fixed-bottom-safe {
+  bottom: var(--tab-bar-height);
+}
+
+/* Full height utilities */
+.min-h-screen-safe {
+  min-height: 100dvh;
+}
+
+.h-screen-safe {
+  height: 100dvh;
+}
+
+/* Content area that accounts for both header and tab bar */
+.content-area {
+  min-height: calc(100dvh - var(--header-height-with-safe) - var(--tab-bar-height));
+}
+
+/* iOS specific fixes - Capacitor WKWebView에서는 100dvh 사용 */
+
+/* ==========================================
+   NEW Component Utilities
+   ========================================== */
+
+/* Card Styles */
+.card {
+  background: var(--color-surface-elevated);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+}
+
+.card-interactive {
+  background: var(--color-surface-elevated);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.card-interactive:active {
+  transform: scale(0.98);
+}
+
+/* Service Card (Grid item) */
+.service-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--color-surface-elevated);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+  border: 1px solid transparent;
+}
+
+.service-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary-100);
+}
+
+.service-card:active {
+  transform: scale(0.97);
+  background: var(--color-gray-50);
+}
+
+/* List Card */
+.list-card {
+  display: flex;
+  align-items: center;
+  padding: var(--space-4);
+  background: var(--color-surface-elevated);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+  transition: all var(--transition-normal);
+}
+
+.list-card:hover {
+  border-color: var(--color-primary-200);
+  background: var(--color-primary-50);
+}
+
+.list-card:active {
+  transform: scale(0.99);
+}
+
+/* Status Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.badge-pending {
+  background: var(--color-warning-light);
+  color: #B45309;
+}
+
+.badge-progress {
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+}
+
+.badge-complete {
+  background: var(--color-success-light);
+  color: #15803D;
+}
+
+.badge-cancel {
+  background: var(--color-error-light);
+  color: #DC2626;
+}
+
+/* Progress Bar */
+.progress-bar {
+  height: 4px;
+  background: var(--color-gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+/* Section Header */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.section-title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.section-more {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Icon Circle (for service icons) */
+.icon-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-50);
+}
+
+.icon-circle-lg {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-xl);
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+}
+
+.empty-state-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--space-4);
+  color: var(--color-gray-300);
+}
+
+.empty-state-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.empty-state-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Bottom CTA Container */
+.bottom-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-4) var(--space-5);
+  padding-bottom: calc(var(--space-4) + var(--safe-area-bottom));
+  background: var(--color-surface-elevated);
+  border-top: 1px solid var(--color-border-light);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Skeleton Loading */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-gray-100) 25%,
+    var(--color-gray-200) 50%,
+    var(--color-gray-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: var(--color-border-light);
+  margin: var(--space-4) 0;
+}
+
+.divider-thick {
+  height: 8px;
+  background: var(--color-gray-100);
+}
+
+/* Touch feedback */
+.touch-feedback {
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.touch-feedback:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* ==========================================
+   Micro Interactions - Korean App Style
+   ========================================== */
+
+/* Spring Animation - 토스 스타일 */
+@keyframes spring-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  50% {
+    transform: scale(1.02) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes spring-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Stagger animation for lists */
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Pulse animation for notifications */
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+/* Ripple effect */
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Success checkmark animation */
+@keyframes check-draw {
+  0% {
+    stroke-dashoffset: 50;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Shake animation for errors */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Float animation for FAB */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Glow animation */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(235, 91, 55, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(235, 91, 55, 0);
+  }
+}
+
+/* Animation utilities */
+.animate-spring-in {
+  animation: spring-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-spring-pop {
+  animation: spring-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+}
+
+.animate-fade-in-scale {
+  animation: fade-in-scale 0.3s ease-out forwards;
+}
+
+.animate-stagger-in {
+  animation: stagger-in 0.3s ease-out forwards;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Stagger delays */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+.stagger-7 { animation-delay: 0.35s; }
+.stagger-8 { animation-delay: 0.4s; }
+
+/* Button press effect - 토스 스타일 */
+.btn-press {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.15s ease;
+}
+
+.btn-press:active {
+  transform: scale(0.96);
+}
+
+/* Card hover lift effect */
+.card-lift {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease;
+}
+
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-lift:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Ripple container */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-container::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.3);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+.ripple-container:active::after {
+  animation: ripple 0.6s ease-out;
+}
+
+/* Tab item animation */
+.tab-item {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tab-item:active {
+  transform: scale(0.9);
+}
+
+.tab-item.active {
+  transform: scale(1);
+}
+
+/* Icon bounce on tap */
+.icon-bounce {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-bounce:active {
+  transform: scale(0.85);
+}
+
+/* Notification badge bounce */
+.notification-badge {
+  animation: bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ==========================================
+   Native iOS Optimizations
+   ========================================== */
+
+/* Prevent rubber-band overscroll on body */
+html, body {
+  overscroll-behavior-y: none;
+  background-color: #FFFFFF;
+}
+
+/* Disable text selection on interactive elements, keep on content */
+button, a, nav, [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Remove iOS tap highlight */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent iOS auto-zoom on input focus (must be >= 16px) */
+input, textarea, select {
+  font-size: max(16px, 1em);
+}
+
+/* Smooth native scrolling */
+.scrollable {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Hide scrollbar but keep scrollable */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Input focus animation */
+.input-animated {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.input-animated:focus {
+  transform: scale(1.01);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+
+/* Toggle switch animation */
+.toggle-switch {
+  transition: background-color 0.2s ease;
+}
+
+.toggle-switch .toggle-knob {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Modal animations */
+.modal-overlay {
+  animation: fade-in 0.2s ease-out;
+}
+
+.modal-content {
+  animation: spring-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Toast notification animation */
+.toast-enter {
+  animation: slide-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.toast-exit {
+  animation: slide-down 0.2s ease-in forwards;
+  animation-direction: reverse;
+}
+
+/* Progress animation */
+.progress-animated {
+  transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Skeleton pulse */
+.skeleton-pulse {
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Banner carousel */
+.banner-slide {
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.3s ease;
+}
+
+/* FAB button */
+.fab-button {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease,
+              background-color 0.2s ease;
+}
+
+.fab-button:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-xl);
+}
+
+.fab-button:active {
+  transform: scale(0.95);
+}
+
+/* Page transition */
+.page-enter {
+  animation: fade-in-scale 0.3s ease-out forwards;
+}
+
+/* Number counter animation */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.count-animate {
+  animation: count-up 0.4s ease-out forwards;
+}
+
+/* Trust badge shimmer */
+@keyframes shimmer-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+.shimmer-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: shimmer-slide 2s infinite;
+}
+
+/* Haptic feedback simulation with visual cue */
+.haptic-feedback {
+  transition: transform 0.1s ease;
+}
+
+.haptic-feedback:active {
+  transform: scale(0.97);
 }

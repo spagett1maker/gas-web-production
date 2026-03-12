@@ -1,10 +1,19 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import BottomTabBar from "@/components/BottomTabBar";
 import AdminTabBar from "@/components/AdminTabBar";
 import NotificationProvider from "@/components/NotificationProvider";
-import AnnouncementBar from "@/components/AnnouncementBar";
+
+
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,11 +36,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" className="h-full">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen-safe`}
       >
-        <AnnouncementBar />
         {children}
         <BottomTabBar />
         <AdminTabBar />

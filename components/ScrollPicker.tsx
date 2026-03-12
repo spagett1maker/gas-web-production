@@ -124,7 +124,7 @@ export default function ScrollPicker({
               key={`${item.value}-${index}`}
               className={`flex items-center justify-center cursor-pointer transition-all duration-150 ${
                 isSelected
-                  ? 'text-[#EB5A36] font-bold'
+                  ? 'text-[#EB5B37] font-bold'
                   : 'text-gray-400'
               }`}
               style={{

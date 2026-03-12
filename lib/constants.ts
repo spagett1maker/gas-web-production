@@ -6,6 +6,7 @@ export const SERVICES = {
   GAS: 'gas',
   PIPE: 'pipe',
   QUOTE: 'quote',
+  CLEAN: 'clean',
   CONTRACT: 'contract',
   CENTER: 'center',
 } as const
@@ -15,6 +16,7 @@ export const SERVICE_NAME_MAP: Record<string, string> = {
   burner: '화구 교체',
   valve: '밸브 교체',
   alarm: '경보기 교체',
+  clean: '버너 청소',
   gas: '가스누출 검사',
   pipe: '배관 철거',
   quote: '시공견적 문의',
@@ -50,9 +52,9 @@ export const ADMIN_USER_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID || 'f0887d78-
 
 // 테마 색상
 export const COLORS = {
-  PRIMARY: '#EB5A36',
+  PRIMARY: '#EB5B37',
   PRIMARY_LIGHT: '#FF5A36',
-  SECONDARY: '#FADCD2',
+  SECONDARY: '#FFEDD5',
   BACKGROUND: '#F3F3F3',
   BACKGROUND_LIGHT: '#F6F6F6',
   TEXT_DARK: '#000000',
