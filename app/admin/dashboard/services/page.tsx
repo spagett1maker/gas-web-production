@@ -5,9 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { SERVICE_NAME_MAP } from '@/lib/constants'
-import { formatDate, formatTime, getServiceIcon } from '@/lib/utils'
+import { formatDate, formatTime } from '@/lib/utils'
 import AdminLayout from '@/components/admin/AdminLayout'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { Search, Eye, RefreshCw } from 'lucide-react'
 
@@ -120,144 +119,172 @@ function ServicesPageContent() {
     setFilteredRequests(filtered)
   }, [requests, selectedCategory, searchTerm])
 
-  // 날짜별 그룹화
-  const groupedRequests = filteredRequests.reduce((acc, request) => {
-    const date = formatDate(request.created_at)
-    if (!acc[date]) acc[date] = []
-    acc[date].push(request)
-    return acc
-  }, {} as Record<string, ServiceRequest[]>)
+  const getCategoryCount = (category: string) => {
+    if (category === '전체') return requests.length
+    return requests.filter(r => r.status === category).length
+  }
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
-        {/* 페이지 헤더 */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="p-6 lg:p-8 space-y-6">
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">서비스 관리</h1>
-            <p className="mt-2 text-gray-600">가스 서비스 요청을 관리하고 처리하세요.</p>
+            <h1 className="text-2xl font-bold text-[#111827]">서비스 관리</h1>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              전체 {requests.length}건의 서비스 요청을 관리합니다.
+            </p>
           </div>
-          <div className="mt-4 sm:mt-0">
-            <button
-              onClick={fetchRequests}
-              disabled={loading}
-              className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 transition-colors"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              새로고침
-            </button>
+          <button
+            onClick={fetchRequests}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#EB5B37] text-white text-sm font-medium rounded-lg hover:bg-[#D4522F] disabled:opacity-50 transition-colors self-start sm:self-auto"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            새로고침
+          </button>
+        </div>
+
+        {/* Filters + Search */}
+        <div className="bg-white rounded-xl border border-[#E5E7EB]">
+          <div className="p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            {/* Category tabs */}
+            <div className="flex flex-wrap gap-1.5">
+              {CATEGORIES.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    selectedCategory === category
+                      ? 'bg-[#EB5B37] text-white'
+                      : 'text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111827]'
+                  }`}
+                >
+                  {category}
+                  <span className={`ml-1.5 text-xs ${
+                    selectedCategory === category ? 'text-white/80' : 'text-[#9CA3AF]'
+                  }`}>
+                    {getCategoryCount(category)}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
+              <input
+                type="text"
+                placeholder="가게명 또는 서비스명 검색..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full sm:w-72 pl-10 pr-4 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#EB5B37]/20 focus:border-[#EB5B37] transition-colors"
+              />
+            </div>
           </div>
         </div>
 
-        {/* 필터 및 검색 */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-              {/* 카테고리 필터 */}
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      selectedCategory === category
-                        ? 'bg-orange-100 text-orange-700 border border-orange-200'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-
-              {/* 검색창 */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="가게명 또는 서비스명으로 검색..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 w-full sm:w-80 text-gray-900"
-                />
-              </div>
+        {/* Table */}
+        <div className="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-6 h-6 border-2 border-[#EB5B37] border-t-transparent rounded-full animate-spin" />
             </div>
-          </CardContent>
-        </Card>
+          ) : filteredRequests.length === 0 ? (
+            <div className="py-20 text-center">
+              <p className="text-sm text-[#9CA3AF]">검색 결과가 없습니다.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
+                    <th className="text-left px-6 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">
+                      서비스
+                    </th>
+                    <th className="text-left px-6 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">
+                      가게
+                    </th>
+                    <th className="text-left px-6 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden lg:table-cell">
+                      주소
+                    </th>
+                    <th className="text-left px-6 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden md:table-cell">
+                      연락처
+                    </th>
+                    <th className="text-left px-6 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">
+                      상태
+                    </th>
+                    <th className="text-left px-6 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden sm:table-cell">
+                      요청일
+                    </th>
+                    <th className="text-right px-6 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">
+                      액션
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E5E7EB]">
+                  {filteredRequests.map((request) => (
+                    <tr
+                      key={request.id}
+                      className="hover:bg-[#F9FAFB] transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-[#111827]">
+                          {SERVICE_NAME_MAP[request.services?.name || ''] || request.services?.name || '-'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-[#111827]">
+                          {request.stores?.name || '알 수 없음'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 hidden lg:table-cell">
+                        <span className="text-sm text-[#6B7280] max-w-[240px] truncate block">
+                          {request.stores?.address || '-'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 hidden md:table-cell">
+                        <span className="text-sm text-[#6B7280]">
+                          {request.profiles?.phone || '-'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={request.status} />
+                      </td>
+                      <td className="px-6 py-4 hidden sm:table-cell">
+                        <div className="text-sm text-[#111827]">
+                          {formatDate(request.created_at)}
+                        </div>
+                        <div className="text-xs text-[#9CA3AF]">
+                          {formatTime(request.created_at)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link
+                          href={`/admin/dashboard/services/detail?id=${request.id}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#EB5B37] hover:bg-[#FEF2EE] rounded-lg transition-colors"
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span className="hidden sm:inline">상세</span>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-        {/* 서비스 요청 목록 */}
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {Object.keys(groupedRequests).length === 0 ? (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <p className="text-gray-500">검색 결과가 없습니다.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              Object.keys(groupedRequests).map(date => (
-                <div key={date} className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                    {date}
-                  </h3>
-                  <div className="grid gap-4">
-                    {groupedRequests[date].map((request) => (
-                      <Card key={request.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-4 flex-1">
-                              {/* <div className="text-2xl">
-                                {getServiceIcon(request.services?.name || '')}
-                              </div> */}
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-2 mb-2">
-                                  <h4 className="text-lg font-semibold text-gray-900">
-                                    {request.stores?.name || '알 수 없는 가게'}
-                                  </h4>
-                                  <StatusBadge status={request.status} />
-                                  <p className="text-xs font-bold border p-1 px-2 rounded-full bg-gray-50 text-black">
-                                    {SERVICE_NAME_MAP[request.services?.name || ''] || request.services?.name}
-                                  </p>
-                                </div>
-                                {/* <p className="text-sm text-gray-600 mb-1">
-                                  {SERVICE_NAME_MAP[request.services?.name || ''] || request.services?.name}
-                                </p> */}
-                                <p className="text-xs text-gray-500">
-                                  {request.stores?.address}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-4">
-                              <div className="text-right">
-                                <p className="text-sm text-gray-500">
-                                  {formatTime(request.created_at)}
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                  {request.profiles?.phone || '-'}
-                                </p>
-                              </div>
-                              <Link
-                                href={`/admin/dashboard/services/detail?id=${request.id}`}
-                                className="flex items-center px-3 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                상세
-                              </Link>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+          {/* Footer with count */}
+          {!loading && filteredRequests.length > 0 && (
+            <div className="px-6 py-3 border-t border-[#E5E7EB] bg-[#F9FAFB]">
+              <p className="text-xs text-[#9CA3AF]">
+                총 {filteredRequests.length}건
+                {selectedCategory !== '전체' && ` (${selectedCategory} 필터 적용)`}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </AdminLayout>
   )
@@ -267,8 +294,8 @@ export default function ServicesPage() {
   return (
     <Suspense fallback={
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="w-6 h-6 border-2 border-[#EB5B37] border-t-transparent rounded-full animate-spin" />
         </div>
       </AdminLayout>
     }>

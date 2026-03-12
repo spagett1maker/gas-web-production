@@ -4,9 +4,8 @@ import { useEffect, useState, Suspense } from 'react'
 import { supabase } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 import AdminLayout from '@/components/admin/AdminLayout'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
-import { Search, Eye, RefreshCw, Mail, Phone, MapPin, Calendar } from 'lucide-react'
+import { Search, Eye, RefreshCw, Mail, Phone, MapPin, Calendar, Users as UsersIcon } from 'lucide-react'
 
 interface User {
   id: string
@@ -77,14 +76,6 @@ function UsersPageContent() {
     setFilteredUsers(filtered)
   }, [users, searchTerm])
 
-  // 날짜별 그룹화
-  const groupedUsers = filteredUsers.reduce((acc, user) => {
-    const date = formatDate(user.created_at)
-    if (!acc[date]) acc[date] = []
-    acc[date].push(user)
-    return acc
-  }, {} as Record<string, User[]>)
-
   const openDetailModal = async (user: User) => {
     setSelectedUser(user)
 
@@ -130,112 +121,139 @@ function UsersPageContent() {
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
-        {/* 페이지 헤더 */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="p-6 lg:p-8 space-y-6">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">사용자 관리</h1>
-            <p className="mt-2 text-gray-600">등록된 사용자 정보를 확인하고 관리하세요.</p>
+            <h1 className="text-2xl font-bold text-[#111827]">사용자 관리</h1>
+            <p className="mt-1 text-[14px] text-[#6B7280]">
+              총 <span className="font-semibold text-[#111827]">{users.length}</span>명의 사용자가 등록되어 있습니다.
+            </p>
           </div>
-          <div className="mt-4 sm:mt-0">
-            <button
-              onClick={fetchUsers}
-              disabled={loading}
-              className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 transition-colors"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              새로고침
-            </button>
-          </div>
+          <button
+            onClick={fetchUsers}
+            disabled={loading}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#EB5B37] text-white text-[14px] font-medium rounded-lg hover:bg-[#D94F2E] disabled:opacity-50 transition-colors"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            새로고침
+          </button>
         </div>
 
-        {/* 검색 */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        {/* Table Card */}
+        <div className="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
+          {/* Search Bar */}
+          <div className="px-5 py-4 border-b border-[#E5E7EB]">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
               <input
                 type="text"
                 placeholder="이메일 또는 연락처로 검색..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 w-full text-gray-900"
+                className="w-full pl-10 pr-4 py-2 text-[14px] text-[#111827] placeholder-[#9CA3AF] bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EB5B37]/20 focus:border-[#EB5B37] transition-colors"
               />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* 사용자 목록 */}
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {Object.keys(groupedUsers).length === 0 ? (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <p className="text-gray-500">검색 결과가 없습니다.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              Object.keys(groupedUsers).map(date => (
-                <div key={date} className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                    {date}
-                  </h3>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {groupedUsers[date].map((user) => (
-                      <Card key={user.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-6">
-                          <div className="space-y-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                                    <span className="text-orange-600 font-semibold text-sm">
-                                      {user.email?.charAt(0).toUpperCase()}
-                                    </span>
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-900 truncate">
-                                      {user.email}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => openDetailModal(user)}
-                                className="flex items-center px-3 py-1.5 text-sm font-medium text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                상세
-                              </button>
-                            </div>
 
-                            <div className="space-y-2 text-sm">
-                              {user.phone && (
-                                <div className="flex items-center gap-2 text-gray-600">
-                                  <Phone className="h-4 w-4 flex-shrink-0" />
-                                  <span>{user.phone}</span>
-                                </div>
-                              )}
-
-                              <div className="flex items-center gap-2 text-gray-600">
-                                <Calendar className="h-4 w-4 flex-shrink-0" />
-                                <span>{formatDate(user.created_at)}</span>
-                              </div>
-                            </div>
+          {/* Table */}
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-7 h-7 border-2 border-[#EB5B37] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-12 h-12 bg-[#F3F4F6] rounded-full flex items-center justify-center mb-3">
+                <UsersIcon className="h-6 w-6 text-[#9CA3AF]" />
+              </div>
+              <p className="text-[14px] text-[#6B7280]">
+                {searchTerm ? '검색 결과가 없습니다.' : '등록된 사용자가 없습니다.'}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
+                    <th className="px-5 py-3 text-left text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">
+                      사용자
+                    </th>
+                    <th className="px-5 py-3 text-left text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">
+                      연락처
+                    </th>
+                    <th className="px-5 py-3 text-left text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">
+                      가입일
+                    </th>
+                    <th className="px-5 py-3 text-right text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">
+                      액션
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E5E7EB]">
+                  {filteredUsers.map((user) => (
+                    <tr
+                      key={user.id}
+                      className="hover:bg-[#F9FAFB] transition-colors"
+                    >
+                      {/* 사용자 */}
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 bg-[#FEF2EE] rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-[#EB5B37] font-semibold text-[13px]">
+                              {user.email?.charAt(0).toUpperCase()}
+                            </span>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+                          <div className="min-w-0">
+                            <p className="text-[14px] font-medium text-[#111827] truncate">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* 연락처 */}
+                      <td className="px-5 py-4">
+                        <span className="text-[14px] text-[#374151]">
+                          {user.phone || '-'}
+                        </span>
+                      </td>
+
+                      {/* 가입일 */}
+                      <td className="px-5 py-4">
+                        <span className="text-[14px] text-[#6B7280]">
+                          {formatDate(user.created_at)}
+                        </span>
+                      </td>
+
+                      {/* 액션 */}
+                      <td className="px-5 py-4 text-right">
+                        <button
+                          onClick={() => openDetailModal(user)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#EB5B37] hover:bg-[#FEF2EE] rounded-md transition-colors"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          상세보기
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Table Footer */}
+          {!loading && filteredUsers.length > 0 && (
+            <div className="px-5 py-3 border-t border-[#E5E7EB] bg-[#F9FAFB]">
+              <p className="text-[13px] text-[#6B7280]">
+                {searchTerm
+                  ? `검색 결과: ${filteredUsers.length}명`
+                  : `전체 ${filteredUsers.length}명`
+                }
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Detail Modal */}
@@ -249,41 +267,54 @@ function UsersPageContent() {
             setUserRequests([])
           }}
           title="사용자 상세 정보"
+          maxWidth="lg"
         >
           <div className="space-y-6">
             {/* 기본 정보 */}
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">기본 정보</h3>
-              <div className="space-y-2">
-                <div className="flex items-start gap-2">
-                  <span className="text-xs font-medium text-gray-500 min-w-[60px]">이메일:</span>
-                  <span className="text-sm text-gray-900">{selectedUser.email}</span>
+            <div className="p-4 bg-[#F9FAFB] rounded-lg border border-[#E5E7EB]">
+              <h3 className="text-[13px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">기본 정보</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Mail className="h-4 w-4 text-[#9CA3AF] flex-shrink-0" />
+                  <div>
+                    <p className="text-[12px] text-[#6B7280]">이메일</p>
+                    <p className="text-[14px] font-medium text-[#111827]">{selectedUser.email}</p>
+                  </div>
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-xs font-medium text-gray-500 min-w-[60px]">연락처:</span>
-                  <span className="text-sm text-gray-900">{selectedUser.phone || '-'}</span>
+                <div className="flex items-center gap-3">
+                  <Phone className="h-4 w-4 text-[#9CA3AF] flex-shrink-0" />
+                  <div>
+                    <p className="text-[12px] text-[#6B7280]">연락처</p>
+                    <p className="text-[14px] font-medium text-[#111827]">{selectedUser.phone || '-'}</p>
+                  </div>
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-xs font-medium text-gray-500 min-w-[60px]">가입일:</span>
-                  <span className="text-sm text-gray-900">
-                    {new Date(selectedUser.created_at).toLocaleString('ko-KR')}
-                  </span>
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-4 w-4 text-[#9CA3AF] flex-shrink-0" />
+                  <div>
+                    <p className="text-[12px] text-[#6B7280]">가입일</p>
+                    <p className="text-[14px] font-medium text-[#111827]">
+                      {new Date(selectedUser.created_at).toLocaleString('ko-KR')}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* 등록된 가게 */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">등록된 가게</h3>
+              <h3 className="text-[13px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">등록된 가게</h3>
               {userStores.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">등록된 가게가 없습니다.</p>
+                <p className="text-[14px] text-[#9CA3AF] text-center py-6">등록된 가게가 없습니다.</p>
               ) : (
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {userStores.map((store) => (
-                    <div key={store.id} className="p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium text-gray-900">{store.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">{store.address}</p>
-                      <p className="text-xs text-gray-400 mt-1">
+                    <div key={store.id} className="p-3 bg-[#F9FAFB] rounded-lg border border-[#E5E7EB]">
+                      <p className="text-[14px] font-medium text-[#111827]">{store.name}</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <MapPin className="h-3 w-3 text-[#9CA3AF]" />
+                        <p className="text-[13px] text-[#6B7280]">{store.address}</p>
+                      </div>
+                      <p className="text-[12px] text-[#9CA3AF] mt-1">
                         등록일: {new Date(store.created_at).toLocaleDateString('ko-KR')}
                       </p>
                     </div>
@@ -294,29 +325,29 @@ function UsersPageContent() {
 
             {/* 서비스 요청 내역 */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">서비스 요청 내역</h3>
+              <h3 className="text-[13px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">서비스 요청 내역</h3>
               {userRequests.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">서비스 요청 내역이 없습니다.</p>
+                <p className="text-[14px] text-[#9CA3AF] text-center py-6">서비스 요청 내역이 없습니다.</p>
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {userRequests.map((request) => (
-                    <div key={request.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <div key={request.id} className="flex items-center justify-between p-3 bg-[#F9FAFB] rounded-lg border border-[#E5E7EB]">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-[14px] font-medium text-[#111827]">
                           {request.services?.name || '알 수 없는 서비스'}
                         </p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-[13px] text-[#6B7280]">
                           {request.stores?.name || '알 수 없는 가게'}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-[12px] text-[#9CA3AF] mt-0.5">
                           {new Date(request.created_at).toLocaleString('ko-KR')}
                         </p>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        request.status === '완료' ? 'bg-emerald-100 text-emerald-700' :
-                        request.status === '진행중' ? 'bg-amber-100 text-amber-700' :
-                        request.status === '취소' ? 'bg-slate-100 text-slate-700' :
-                        'bg-blue-100 text-blue-700'
+                      <span className={`text-[12px] font-medium px-2.5 py-1 rounded-full ${
+                        request.status === '완료' ? 'bg-[#ECFDF5] text-[#059669]' :
+                        request.status === '진행중' ? 'bg-[#FFFBEB] text-[#D97706]' :
+                        request.status === '취소' ? 'bg-[#F3F4F6] text-[#6B7280]' :
+                        'bg-[#EFF6FF] text-[#2563EB]'
                       }`}>
                         {request.status}
                       </span>
@@ -336,8 +367,8 @@ export default function UsersPage() {
   return (
     <Suspense fallback={
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="w-7 h-7 border-2 border-[#EB5B37] border-t-transparent rounded-full animate-spin" />
         </div>
       </AdminLayout>
     }>

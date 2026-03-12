@@ -1,26 +1,41 @@
+// Supabase Edge Function - Solapi 알림 SMS 발송
+// 서비스 상태 변경 시 사용자에게 알림 발송
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const NAVER_ACCESS_KEY = Deno.env.get('NAVER_ACCESS_KEY')!
-const NAVER_SECRET_KEY = Deno.env.get('NAVER_SECRET_KEY')!
-const NAVER_SENS_SERVICE_ID = Deno.env.get('NAVER_SENS_SERVICE_ID')!
-const NAVER_CALLING_NUMBER = Deno.env.get('NAVER_CALLING_NUMBER')!
+const SOLAPI_API_KEY = Deno.env.get('SOLAPI_API_KEY')!
+const SOLAPI_API_SECRET = Deno.env.get('SOLAPI_API_SECRET')!
+const SOLAPI_CALLING_NUMBER = Deno.env.get('SOLAPI_CALLING_NUMBER')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
-async function makeSignature(method: string, uri: string, timestamp: string): Promise<string> {
-  const message = `${method} ${uri}\n${timestamp}\n${NAVER_ACCESS_KEY}`
+async function makeSignature(date: string, salt: string): Promise<string> {
+  const data = date + salt
   const encoder = new TextEncoder()
 
   const key = await crypto.subtle.importKey(
     'raw',
-    encoder.encode(NAVER_SECRET_KEY),
+    encoder.encode(SOLAPI_API_SECRET),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign'],
   )
 
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(message))
-  return btoa(String.fromCharCode(...new Uint8Array(signature)))
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(data))
+  return Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+function generateSalt(length = 16): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+  const randomValues = new Uint8Array(length)
+  crypto.getRandomValues(randomValues)
+  for (let i = 0; i < length; i++) {
+    result += chars[randomValues[i] % chars.length]
+  }
+  return result
 }
 
 function toLocalPhone(phone: string): string {
@@ -87,29 +102,29 @@ Deno.serve(async (req) => {
     }
 
     const localPhone = toLocalPhone(profile.phone)
-    const uri = `/sms/v2/services/${NAVER_SENS_SERVICE_ID}/messages`
-    const timestamp = Date.now().toString()
-    const signature = await makeSignature('POST', uri, timestamp)
+    const date = new Date().toISOString()
+    const salt = generateSalt()
+    const signature = await makeSignature(date, salt)
 
-    const response = await fetch(`https://sens.apigw.ntruss.com${uri}`, {
+    const response = await fetch('https://api.solapi.com/messages/v4/send', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'x-ncp-apigw-timestamp': timestamp,
-        'x-ncp-iam-access-key': NAVER_ACCESS_KEY,
-        'x-ncp-apigw-signature-v2': signature,
+        'Content-Type': 'application/json',
+        'Authorization': `HMAC-SHA256 apiKey=${SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`,
       },
       body: JSON.stringify({
-        type: 'SMS',
-        from: NAVER_CALLING_NUMBER,
-        content: message,
-        messages: [{ to: localPhone }],
+        message: {
+          to: localPhone,
+          from: SOLAPI_CALLING_NUMBER,
+          text: message,
+          type: 'SMS',
+        },
       }),
     })
 
     if (!response.ok) {
       const errorBody = await response.text()
-      console.error('SENS API 오류:', response.status, errorBody)
+      console.error('Solapi API 오류:', response.status, errorBody)
       return new Response(
         JSON.stringify({ error: 'SMS 발송 실패' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } },
@@ -117,7 +132,7 @@ Deno.serve(async (req) => {
     }
 
     const result = await response.json()
-    console.log('알림 SMS 발송 성공:', result.requestId, `→ ${localPhone}`)
+    console.log('알림 SMS 발송 성공:', result, `→ ${localPhone}`)
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
