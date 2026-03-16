@@ -251,13 +251,7 @@ export default function LoginPage() {
       </div>
 
       <div className="page-content">
-        {/* 🔥 테스트 배너 - 나중에 삭제 */}
-        <div className="mx-5 mt-4 p-4 bg-[#EB5B37] rounded-[12px] text-center">
-          <p className="text-white text-[16px] font-bold">🎉 실시간 배포 테스트 성공!</p>
-          <p className="text-white/80 text-[13px] mt-1">이 배너가 보이면 Vercel 연동 완료</p>
-        </div>
-
-        {/* Title */}
+{/* Title */}
         <div className="px-5 pt-4 pb-8">
           <h1 className="text-[26px] font-bold text-[#1A1A1A] tracking-[-0.6px] leading-[1.35]">
             반가워요!<br />
