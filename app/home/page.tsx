@@ -168,7 +168,7 @@ function NotificationSheet({ onClose }: { onClose: () => void }) {
 
 const SERVICES = [
   { key: 'burner', label: '화구 교체', image: '/main/화구교체_bright.png', desc: '중화 · 버너 · 화구' },
-  { key: 'clean', label: '청소', image: '/main/cleaning_tight.png', desc: '가게 청소' },
+  { key: 'clean', label: '청소', image: '/main/cleaning_tight.png', desc: '화구 청소' },
   { key: 'valve', label: '밸브 교체', image: '/main/밸브_bright.png', desc: '가스 밸브 · 공기조절기' },
   { key: 'alarm', label: '경보기 교체', image: '/main/경보기_bright.png', desc: '경보기 · 감지기' },
   { key: 'gas', label: '가스 점검', image: '/main/가스누출_bright.png', desc: '정기 · 수시 검사' },
@@ -433,7 +433,41 @@ export default function HomePage() {
         {/* Promotion Banners */}
         <PromotionBanners onNavigate={(path) => router.push(path)} />
 
-        <section className="bg-white rounded-t-4xl pt-5 shadow-[0_-8px_30px_rgba(0,0,0,0.05)] border-t border-gray-100/50">
+        {/* 최근 서비스 현황 */}
+        {activeService && (
+          <section className="px-5 py-4 bg-[#f4f5f9]">
+            <button
+              onClick={() => router.push(`/my-service/${activeService.id}`)}
+              className="w-full p-4 bg-white rounded-2xl border border-[#F2F2F7] active:bg-[#FAFAFA] transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#FEF2EE] rounded-xl flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-[#EB5B37]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[15px] font-semibold text-[#1A1A1A] tracking-[-0.3px]">
+                      {getServiceLabel((activeService as any).services?.name || '')}
+                    </p>
+                    <p className="text-[13px] text-[#8E8E93] mt-0.5">
+                      {activeService.status === '진행중' ? '서비스 진행 중' : '접수 대기 중'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[13px] font-semibold ${
+                    activeService.status === '진행중' ? 'text-[#3182F6]' : 'text-[#EB5B37]'
+                  }`}>
+                    {activeService.status}
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-[#C7C7CC]" />
+                </div>
+              </div>
+            </button>
+          </section>
+        )}
+
+        <section className="bg-white rounded-t-3xl pt-5 -mt-1 relative z-10">
 
         {/* Title */}
         <section className="px-5 pt-3">
