@@ -30,7 +30,7 @@ const PAYMENT_METHODS = [
 
 export default function CleaningServicePage() {
   const [currentStep, setCurrentStep] = useState(1)
-  const [selected, setSelected] = useState<number | null>(null)
+  const [counts, setCounts] = useState<number[]>(Array(OPTIONS.length).fill(0))
   const [extra, setExtra] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('')
@@ -95,9 +95,16 @@ export default function CleaningServicePage() {
     }
   }
 
+  const handleCount = (idx: number, diff: number) => {
+    setCounts(prev => prev.map((c, i) => (i === idx ? Math.max(0, c + diff) : c)))
+  }
+
+  const anySelected = counts.some(c => c > 0)
+  const total = counts.reduce((sum, c, i) => sum + c * OPTIONS[i].price, 0)
+
   const canProceed = () => {
     switch (currentStep) {
-      case 1: return selected !== null
+      case 1: return anySelected
       case 2: return selectedDate && selectedTimeSlot
       case 3: return paymentMethod
       default: return true
@@ -115,7 +122,7 @@ export default function CleaningServicePage() {
   }
 
   const handleSubmit = async () => {
-    if (selected === null) return
+    if (!anySelected) return
     setLoading(true)
 
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -161,13 +168,17 @@ export default function CleaningServicePage() {
       return
     }
 
-    const requestDetails: any[] = [
-      {
-        request_id: request.id,
-        key: '청소 종류',
-        value: OPTIONS[selected].name,
-      },
-    ]
+    const requestDetails: any[] = []
+
+    OPTIONS.forEach((opt, idx) => {
+      if (counts[idx] > 0) {
+        requestDetails.push({
+          request_id: request.id,
+          key: opt.name,
+          value: `${counts[idx]}개`,
+        })
+      }
+    })
 
     if (extra.trim()) {
       requestDetails.push({
@@ -273,40 +284,63 @@ export default function CleaningServicePage() {
 
             <div className="h-2" />
 
-            {/* 옵션 리스트 */}
+            {/* 옵션 리스트 - 수량 선택 */}
             <div className="bg-white px-5 py-4">
               <div className="space-y-2.5">
                 {OPTIONS.map((opt, idx) => {
-                  const isActive = selected === idx
+                  const count = counts[idx]
+                  const isActive = count > 0
                   return (
-                    <button
+                    <div
                       key={opt.name}
-                      onClick={() => setSelected(idx)}
-                      className={`w-full flex items-center gap-3.5 p-4 rounded-2xl transition-all duration-200 ${
+                      className={`p-4 rounded-2xl border transition-all ${
                         isActive
-                          ? 'bg-white ring-[1.5px] ring-[#EB5B37] shadow-[0_2px_16px_rgba(235,91,55,0.08)]'
-                          : 'bg-[#F8F8FA] active:bg-[#F0F0F2]'
+                          ? 'border-[#EB5B37] bg-[#FEF2EE]/30'
+                          : 'border-[#F2F2F7] bg-[#F8F8FA]'
                       }`}
                     >
-                      <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                        isActive ? 'border-[#EB5B37] bg-[#EB5B37]' : 'border-[#D1D1D6]'
-                      }`}>
-                        {isActive && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                      <div className="flex items-center">
+                        <div className="flex-1">
+                          <p className={`text-[15px] font-semibold tracking-[-0.3px] ${
+                            isActive ? 'text-[#1A1A1A]' : 'text-[#3A3A3C]'
+                          }`}>
+                            {opt.name}
+                          </p>
+                          <p className="text-[14px] font-bold text-[#EB5B37] mt-0.5">
+                            {formatPrice(opt.price)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            className="w-9 h-9 rounded-full bg-[#F5F5F7] flex items-center justify-center text-[#8E8E93] active:scale-90 transition-transform disabled:opacity-40"
+                            onClick={() => handleCount(idx, -1)}
+                            disabled={count === 0}
+                          >
+                            <span className="text-xl font-medium leading-none">−</span>
+                          </button>
+                          <span className="text-[17px] font-bold text-[#1A1A1A] w-6 text-center">
+                            {count}
+                          </span>
+                          <button
+                            className="w-9 h-9 rounded-full bg-[#EB5B37] flex items-center justify-center text-white active:scale-90 transition-transform"
+                            onClick={() => handleCount(idx, 1)}
+                          >
+                            <span className="text-xl font-medium leading-none">+</span>
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex-1 text-left">
-                        <span className={`text-[15px] font-semibold tracking-[-0.3px] ${
-                          isActive ? 'text-[#1A1A1A]' : 'text-[#3A3A3C]'
-                        }`}>
-                          {opt.name}
-                        </span>
-                      </div>
-                      <span className="text-[15px] font-bold text-[#EB5B37]">
-                        {formatPrice(opt.price)}
-                      </span>
-                    </button>
+                    </div>
                   )
                 })}
               </div>
+
+              {/* 합계 표시 */}
+              {total > 0 && (
+                <div className="flex justify-between items-center mt-4 pt-4 border-t border-[#F2F2F7]">
+                  <span className="text-[14px] text-[#8E8E93]">예상 금액</span>
+                  <span className="text-[18px] font-bold text-[#EB5B37]">{formatPrice(total)}</span>
+                </div>
+              )}
             </div>
 
             <div className="h-2" />
@@ -492,14 +526,27 @@ export default function CleaningServicePage() {
             {/* 서비스 정보 */}
             <div className="bg-white px-5 py-5">
               <p className="text-[13px] font-medium text-[#8E8E93] tracking-[-0.2px] mb-3">선택한 서비스</p>
-              <div className="flex items-center justify-between">
-                <p className="text-[15px] font-medium text-[#1A1A1A] tracking-[-0.2px]">
-                  {selected !== null && OPTIONS[selected].name}
-                </p>
-                <p className="text-[15px] font-bold text-[#EB5B37]">
-                  {selected !== null && formatPrice(OPTIONS[selected].price)}
-                </p>
+              <div className="space-y-2">
+                {OPTIONS.map((opt, idx) => {
+                  if (counts[idx] === 0) return null
+                  return (
+                    <div key={opt.name} className="flex items-center justify-between">
+                      <p className="text-[15px] font-medium text-[#1A1A1A] tracking-[-0.2px]">
+                        {opt.name} × {counts[idx]}
+                      </p>
+                      <p className="text-[15px] font-bold text-[#EB5B37]">
+                        {formatPrice(opt.price * counts[idx])}
+                      </p>
+                    </div>
+                  )
+                })}
               </div>
+              {total > 0 && (
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#F0F0F2]">
+                  <p className="text-[15px] font-semibold text-[#1A1A1A]">합계</p>
+                  <p className="text-[16px] font-bold text-[#EB5B37]">{formatPrice(total)}</p>
+                </div>
+              )}
               {extra.trim() && (
                 <div className="mt-3 pt-3 border-t border-[#F0F0F2]">
                   <p className="text-[13px] text-[#8E8E93] mb-1">추가 요청사항</p>
