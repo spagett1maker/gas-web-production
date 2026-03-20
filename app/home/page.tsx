@@ -508,6 +508,40 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        {/* 대표번호 안내 */}
+        <section className="mx-5 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #F8F9FA 0%, #F0F1F5 100%)' }}>
+          <div className="px-5 py-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-[#EB5B37] rounded-lg flex items-center justify-center">
+                <Phone className="w-4 h-4 text-white" strokeWidth={2.2} />
+              </div>
+              <span className="text-[13px] font-semibold text-[#8E8E93] tracking-[-0.2px]">우리동네가스 고객센터</span>
+            </div>
+            <p className="text-[28px] font-bold text-[#1A1A1A] tracking-[-1px] mb-1">
+              1844-0627
+            </p>
+            <p className="text-[13px] text-[#8E8E93] tracking-[-0.2px] leading-[1.5] mb-4">
+              평일 09:00 ~ 18:00 · 토요일 09:00 ~ 13:00
+            </p>
+            <div className="flex gap-2.5">
+              <a
+                href="tel:18440627"
+                className="flex-1 h-[44px] bg-[#1A1A1A] rounded-xl flex items-center justify-center gap-2 active:bg-[#333] transition-colors"
+              >
+                <Phone className="w-4 h-4 text-white" strokeWidth={2} />
+                <span className="text-[14px] font-semibold text-white tracking-[-0.3px]">전화 연결</span>
+              </a>
+              <button
+                onClick={() => router.push('/contact')}
+                className="flex-1 h-[44px] bg-white border border-[#E5E5EA] rounded-xl flex items-center justify-center gap-2 active:bg-[#F5F5F7] transition-colors"
+              >
+                <span className="text-[14px] font-semibold text-[#1A1A1A] tracking-[-0.3px]">1:1 문의</span>
+              </button>
+            </div>
+          </div>
+        </section>
+        <div className="pb-6" />
         </section>
       </main>
 

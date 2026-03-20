@@ -9,8 +9,6 @@ import {
   Calendar
 } from 'lucide-react'
 
-const CATEGORIES = ['전체', '화구 교체', '경보기 교체', '배관', '가스누출', '밸브 교체']
-
 const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string; text: string; animate?: boolean }> = {
   '요청됨': { icon: Clock, color: '#EB5B37', bg: '#FEF2EE', text: '요청됨' },
   '진행중': { icon: Loader2, color: '#3B82F6', bg: '#EFF6FF', text: '진행중', animate: true },
@@ -79,7 +77,7 @@ function SkeletonLoader() {
 }
 
 export default function MyServicePage() {
-  const [selected, setSelected] = useState('전체')
+  const [activeTab, setActiveTab] = useState<'진행중' | '완료'>('진행중')
   const [requests, setRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -121,18 +119,10 @@ export default function MyServicePage() {
     checkAuth()
   }, [])
 
-  const filtered = requests.filter((r) => {
-    const koreanName = SERVICE_NAME_MAP[r.services.name]
-    if (selected === '전체') return true
-    return koreanName?.includes(selected)
-  })
+  const inProgress = requests.filter(r => r.status === '요청됨' || r.status === '진행중')
+  const completed = requests.filter(r => r.status === '완료' || r.status === '취소')
 
-  const inProgress = filtered.filter(r => r.status === '요청됨' || r.status === '진행중')
-  const completed = filtered.filter(r => r.status === '완료' || r.status === '취소')
-
-  // 요약 통계
-  const totalInProgress = requests.filter(r => r.status === '요청됨' || r.status === '진행중').length
-  const totalCompleted = requests.filter(r => r.status === '완료').length
+  const displayList = activeTab === '진행중' ? inProgress : completed
 
   if (loading) return <SkeletonLoader />
 
@@ -155,136 +145,67 @@ export default function MyServicePage() {
       </header>
 
       <main className="page-content">
-        {/* 요약 통계 - 인라인 섹션 */}
-        {requests.length > 0 && (
-          <>
-            <section className="px-5 py-5">
-              <div className="flex items-center justify-around">
-                <div className="text-center">
-                  <p className="text-[24px] font-bold text-[#EB5B37] tracking-[-0.5px]">
-                    {totalInProgress}
-                  </p>
-                  <p className="text-[13px] text-[#8E8E93] tracking-[-0.2px] mt-1">진행중</p>
-                </div>
-                <div className="w-px h-10 bg-[#F2F2F7]" />
-                <div className="text-center">
-                  <p className="text-[24px] font-bold text-[#22C55E] tracking-[-0.5px]">
-                    {totalCompleted}
-                  </p>
-                  <p className="text-[13px] text-[#8E8E93] tracking-[-0.2px] mt-1">완료</p>
-                </div>
-                <div className="w-px h-10 bg-[#F2F2F7]" />
-                <div className="text-center">
-                  <p className="text-[24px] font-bold text-[#1A1A1A] tracking-[-0.5px]">
-                    {requests.length}
-                  </p>
-                  <p className="text-[13px] text-[#8E8E93] tracking-[-0.2px] mt-1">전체</p>
-                </div>
-              </div>
-            </section>
-            {/* 섹션 구분 - 토스 스타일 thick divider */}
-            <div className="h-2 bg-[#F5F5F7]" />
-          </>
-        )}
-
-        {/* 카테고리 필터 */}
-        <section className="px-5 pt-4 pb-2">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-            {CATEGORIES.map((cat) => (
+        {/* 탭 네비게이션 - 세탁특공대 스타일 */}
+        <div className="flex border-b border-[#F2F2F7]">
+          {(['진행중', '완료'] as const).map((tab) => {
+            const count = tab === '진행중' ? inProgress.length : completed.length
+            return (
               <button
-                key={cat}
-                className={`px-4 py-2 rounded-full whitespace-nowrap text-[13px] font-semibold tracking-[-0.2px] transition-all active:scale-[0.96] ${
-                  selected === cat
-                    ? 'bg-[#1A1A1A] text-white'
-                    : 'bg-[#F5F5F7] text-[#8E8E93] active:bg-[#E5E5EA]'
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-3.5 text-center text-[16px] font-bold tracking-[-0.3px] transition-colors relative ${
+                  activeTab === tab ? 'text-[#1A1A1A]' : 'text-[#C7C7CC]'
                 }`}
-                onClick={() => setSelected(cat)}
               >
-                {cat}
+                {tab === '진행중' ? '진행중인 서비스' : '지난 서비스'}
+                {count > 0 && (
+                  <span className={`ml-1 text-[14px] ${activeTab === tab ? 'text-[#EB5B37]' : 'text-[#C7C7CC]'}`}>
+                    {count}
+                  </span>
+                )}
+                {activeTab === tab && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#1A1A1A] rounded-full" />
+                )}
               </button>
-            ))}
-          </div>
-        </section>
+            )
+          })}
+        </div>
 
         {/* 서비스 리스트 */}
-        {filtered.length === 0 ? (
+        {displayList.length === 0 ? (
           /* 빈 상태 */
-          <div className="flex flex-col items-center justify-center pt-16 pb-20">
+          <div className="flex flex-col items-center justify-center pt-20 pb-20">
             <div className="w-20 h-20 bg-[#F5F5F7] rounded-full flex items-center justify-center mb-5">
               <Calendar className="w-9 h-9 text-[#C7C7CC]" strokeWidth={1.5} />
             </div>
             <p className="text-[17px] font-bold text-[#1A1A1A] tracking-[-0.3px] mb-1.5">
-              서비스 내역이 없습니다
+              {activeTab === '진행중' ? '진행중인 서비스가 없습니다' : '지난 서비스가 없습니다'}
             </p>
             <p className="text-[14px] text-[#8E8E93] tracking-[-0.2px] mb-7">
-              가스 서비스를 요청해보세요
+              {activeTab === '진행중' ? '서비스를 신청해보세요' : '완료된 서비스가 여기에 표시됩니다'}
             </p>
-            <button
-              onClick={() => router.push('/home')}
-              className="h-[44px] px-6 bg-[#EB5B37] text-white text-[15px] font-semibold rounded-xl active:bg-[#D9482A] active:scale-[0.98] transition-all"
-            >
-              서비스 둘러보기
-            </button>
+            {activeTab === '진행중' && (
+              <button
+                onClick={() => router.push('/home')}
+                className="h-[44px] px-6 bg-[#1A1A1A] text-white text-[15px] font-semibold rounded-xl active:bg-[#333] active:scale-[0.98] transition-all"
+              >
+                서비스 신청하기
+              </button>
+            )}
           </div>
         ) : (
-          <>
-            {/* 진행중 */}
-            {inProgress.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between px-5 pt-4 pb-2">
-                  <h2 className="text-[13px] font-medium text-[#8E8E93] tracking-[-0.2px]">
-                    진행중인 서비스
-                  </h2>
-                  <span className="text-[13px] font-semibold text-[#EB5B37] tracking-[-0.2px]">
-                    {inProgress.length}건
-                  </span>
-                </div>
-                <div>
-                  {inProgress.map((service: any, index: number) => (
-                    <ServiceRow
-                      key={service.id}
-                      service={service}
-                      index={index}
-                      dimmed={false}
-                      isLast={index === inProgress.length - 1}
-                      onClick={() => router.push(`/my-service/detail?id=${service.id}`)}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* 섹션 구분 */}
-            {inProgress.length > 0 && completed.length > 0 && (
-              <div className="h-2 bg-[#F5F5F7]" />
-            )}
-
-            {/* 완료된 서비스 */}
-            {completed.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between px-5 pt-4 pb-2">
-                  <h2 className="text-[13px] font-medium text-[#8E8E93] tracking-[-0.2px]">
-                    지난 서비스
-                  </h2>
-                  <span className="text-[13px] font-medium text-[#C7C7CC] tracking-[-0.2px]">
-                    {completed.length}건
-                  </span>
-                </div>
-                <div>
-                  {completed.map((service: any, index: number) => (
-                    <ServiceRow
-                      key={service.id}
-                      service={service}
-                      index={index + inProgress.length}
-                      dimmed
-                      isLast={index === completed.length - 1}
-                      onClick={() => router.push(`/my-service/detail?id=${service.id}`)}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-          </>
+          <div>
+            {displayList.map((service: any, index: number) => (
+              <ServiceRow
+                key={service.id}
+                service={service}
+                index={index}
+                dimmed={activeTab === '완료'}
+                isLast={index === displayList.length - 1}
+                onClick={() => router.push(`/my-service/detail?id=${service.id}`)}
+              />
+            ))}
+          </div>
         )}
       </main>
     </div>

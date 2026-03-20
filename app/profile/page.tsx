@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { formatPhoneNumber } from '@/utils/format'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
-import { ChevronRight, Store, Trash2 } from 'lucide-react'
+import { ChevronRight, Store, Trash2, CreditCard, Bell, Settings } from 'lucide-react'
 
 // 스켈레톤
 function Skeleton() {
@@ -120,59 +120,105 @@ export default function ProfilePage() {
     <div className="page-with-tabs bg-white">
       {/* 헤더 */}
       <header className="app-header">
-        <div className="h-[48px] px-5 flex items-center">
+        <div className="h-[48px] px-5 flex items-center justify-between">
           <span className="text-[17px] font-semibold tracking-[-0.3px] text-[#1A1A1A]">
             프로필
           </span>
+          <button
+            onClick={() => router.push('/notification')}
+            className="w-9 h-9 flex items-center justify-center rounded-full active:bg-[#F5F5F7] transition-colors"
+          >
+            <Settings className="w-[20px] h-[20px] text-[#1A1A1A]" strokeWidth={1.8} />
+          </button>
         </div>
       </header>
 
       <main className="page-content">
-        {/* 카드형 액션 영역 */}
-        <section className="px-5 pt-4">
-          {/* 나의 가게 카드 */}
-          <button
-            onClick={() => router.push('/profile/my-store')}
-            className="w-full flex items-center py-4 border-b border-[#F2F2F7] active:bg-[#FAFAFA] transition-colors"
-          >
-            <div className="w-[52px] h-[52px] rounded-[14px] bg-[#1A1A1A] flex items-center justify-center mr-4 flex-shrink-0">
-              <Store className="w-[22px] h-[22px] text-white" strokeWidth={1.8} />
+        {/* 유저 & 가게 정보 - 세탁특공대 스타일 */}
+        <section className="px-5 pt-6 pb-5">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-[24px] font-bold text-[#1A1A1A] tracking-[-0.5px]">
+                {store ? `${store}` : '가게를 등록해주세요'}
+              </h2>
+              {storeAddress && (
+                <p className="text-[14px] text-[#8E8E93] tracking-[-0.2px] mt-1">
+                  {storeAddress}
+                </p>
+              )}
             </div>
-            <div className="flex-1 text-left min-w-0">
-              <p className="text-[16px] font-bold text-[#1A1A1A] tracking-[-0.3px]">
-                {store || '가게 등록하기'}
-              </p>
-              <p className="text-[13px] text-[#8E8E93] tracking-[-0.2px] mt-0.5 truncate">
-                {storeAddress || '가게 정보를 등록해주세요'}
-              </p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-[#C7C7CC] flex-shrink-0 ml-2" />
-          </button>
+          </div>
 
+          {/* 아이콘 바로가기 그리드 - 세탁특공대 스타일 */}
+          <div className="grid grid-cols-4 gap-3">
+            <button
+              onClick={() => router.push('/profile/my-store')}
+              className="flex flex-col items-center gap-2 py-3 active:bg-[#F9F9F9] rounded-xl transition-colors"
+            >
+              <div className="w-11 h-11 bg-[#F5F5F7] rounded-full flex items-center justify-center">
+                <Store className="w-[20px] h-[20px] text-[#1A1A1A]" strokeWidth={1.6} />
+              </div>
+              <span className="text-[12px] font-medium text-[#1A1A1A] tracking-[-0.2px]">내 가게</span>
+            </button>
+            <button
+              onClick={() => router.push('/profile/payment')}
+              className="flex flex-col items-center gap-2 py-3 active:bg-[#F9F9F9] rounded-xl transition-colors"
+            >
+              <div className="w-11 h-11 bg-[#F5F5F7] rounded-full flex items-center justify-center">
+                <CreditCard className="w-[20px] h-[20px] text-[#1A1A1A]" strokeWidth={1.6} />
+              </div>
+              <span className="text-[12px] font-medium text-[#1A1A1A] tracking-[-0.2px]">결제수단</span>
+            </button>
+            <button
+              onClick={() => router.push('/notification')}
+              className="flex flex-col items-center gap-2 py-3 active:bg-[#F9F9F9] rounded-xl transition-colors"
+            >
+              <div className="w-11 h-11 bg-[#F5F5F7] rounded-full flex items-center justify-center">
+                <Bell className="w-[20px] h-[20px] text-[#1A1A1A]" strokeWidth={1.6} />
+              </div>
+              <span className="text-[12px] font-medium text-[#1A1A1A] tracking-[-0.2px]">알림</span>
+            </button>
+            <button
+              onClick={() => router.push('/contact')}
+              className="flex flex-col items-center gap-2 py-3 active:bg-[#F9F9F9] rounded-xl transition-colors"
+            >
+              <div className="w-11 h-11 bg-[#F5F5F7] rounded-full flex items-center justify-center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+                </svg>
+              </div>
+              <span className="text-[12px] font-medium text-[#1A1A1A] tracking-[-0.2px]">1:1 문의</span>
+            </button>
+          </div>
         </section>
 
         {/* 구분선 */}
         <div className="h-2 bg-[#F5F5F7]" />
 
-        {/* 메뉴 리스트 */}
+        {/* 지원 섹션 */}
         <section className="px-5">
+          <p className="text-[13px] font-medium text-[#8E8E93] tracking-[-0.2px] pt-4 pb-1">지원</p>
           <MenuItem label="고객센터" onPress={() => router.push('/contact')} />
           <MenuItem label="프로모션" onPress={() => {}} />
           <MenuItem label="이용약관" onPress={() => router.push('/terms')} isLast />
         </section>
 
         {/* 구분선 */}
-        <div className="h-1 bg-[#F5F5F7]" />
+        <div className="h-2 bg-[#F5F5F7]" />
 
+        {/* 정보 섹션 */}
         <section className="px-5">
-          <MenuItem label="개인정보처리방침" onPress={() => router.push('/privacy')} />
-          <MenuItem label="로그아웃" onPress={handleLogout} isLast />
+          <p className="text-[13px] font-medium text-[#8E8E93] tracking-[-0.2px] pt-4 pb-1">정보</p>
+          <MenuItem label="개인정보처리방침" onPress={() => router.push('/privacy')} isLast />
         </section>
 
         {/* 구분선 */}
-        <div className="h-1 bg-[#F5F5F7]" />
+        <div className="h-2 bg-[#F5F5F7]" />
 
+        {/* 계정 섹션 */}
         <section className="px-5">
+          <p className="text-[13px] font-medium text-[#8E8E93] tracking-[-0.2px] pt-4 pb-1">계정</p>
+          <MenuItem label="로그아웃" onPress={handleLogout} />
           <MenuItem
             label="계정 삭제"
             onPress={() => setDeleteModalVisible(true)}
