@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# 단, 이 레포는 개인 운영 프로젝트라 .env.local / .env.example 은 커밋함
+!.env.local
+!.env.example
 
 # vercel
 .vercel
