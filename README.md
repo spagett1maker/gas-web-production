@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 우리동네가스 (gas-web-2)
 
-## Getting Started
+가스 서비스 예약/관리 하이브리드 모바일 앱.
+**Next.js 16 (정적 export) + Supabase + Capacitor 8 + Tailwind 4**
 
-First, run the development server:
+| 플랫폼 | 상태 |
+|---|---|
+| Web | https://homegascare.vercel.app |
+| iOS | App Store (`com.gasservice.app`) |
+| Android | Play Store (`com.gasservice.app`) |
+
+---
+
+## 빠른 시작
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # .env.local 값 채우기
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+모바일 빌드:
+```bash
+npm run cap:ios       # Xcode 열림
+npm run cap:android   # Android Studio 열림
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 문서
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| 파일 | 내용 |
+|---|---|
+| [`ONBOARDING.md`](./ONBOARDING.md) | **신규 합류 시 가장 먼저 읽기.** 환경 세팅, 빌드, iOS/Android 배포, 함정 |
+| [`PROJECT_ANALYSIS.md`](./PROJECT_ANALYSIS.md) | 기술 스택, 디렉토리, DB 스키마, 인증 흐름 |
+| [`DESIGN_SYSTEM.md`](./DESIGN_SYSTEM.md) | 컬러/타이포/스페이싱 토큰, 컴포넌트 가이드 |
+| [`REDESIGN_PLAN.md`](./REDESIGN_PLAN.md) | UX 리디자인 배경/벤치마킹 |
