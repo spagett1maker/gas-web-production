@@ -192,38 +192,44 @@ export default function NotificationPage() {
       {loading ? (
         <Loading />
       ) : notifications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="text-6xl mb-4">🔔</div>
-          <p className="text-gray-500 text-base">알림이 없습니다.</p>
+        <div className="flex flex-col items-center justify-center pt-16 pb-20">
+          <div className="w-20 h-20 bg-[#F5F5F7] rounded-full flex items-center justify-center mb-5">
+            <span className="text-[36px]">🔔</span>
+          </div>
+          <p className="text-[17px] font-bold text-[#1A1A1A] tracking-[-0.3px] mb-1.5">
+            알림이 없습니다
+          </p>
+          <p className="text-[14px] text-[#8E8E93] tracking-[-0.2px]">
+            서비스 관련 알림이 여기에 표시됩니다
+          </p>
         </div>
       ) : (
-        <div className="divide-y divide-gray-100">
-          {notifications.map((notification) => (
+        <div>
+          {notifications.map((notification, index) => (
             <button
               key={notification.id}
               onClick={() => handleNotificationClick(notification)}
-              className={`w-full px-5 py-4 text-left hover:bg-gray-50 transition-colors ${
-                notification.read ? 'bg-white' : 'bg-blue-50'
-              }`}
+              className={`w-full px-5 py-4 text-left active:bg-[#F9F9F9] transition-colors ${
+                notification.read ? 'bg-white' : 'bg-[#FEF2EE]/30'
+              } ${index < notifications.length - 1 ? 'border-b border-[#F2F2F7]' : ''}`}
             >
               <div className="flex items-start">
-                <div className="text-3xl mr-3">
-                  {getTypeIcon(notification.type)}
+                <div className="w-10 h-10 bg-[#F5F5F7] rounded-xl flex items-center justify-center mr-3.5 flex-shrink-0">
+                  <span className="text-[20px]">{getTypeIcon(notification.type)}</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-base font-bold text-gray-800 mb-1">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-[15px] font-semibold text-[#1A1A1A] tracking-[-0.3px] mb-0.5">
                     {notification.title}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-[13px] text-[#8E8E93] tracking-[-0.2px] line-clamp-2 mb-1.5">
                     {notification.message}
                   </p>
-                  <p className="text-xs text-gray-400">
-                    {formatRelativeDate(notification.created_at)} •{' '}
-                    {formatTime(notification.created_at)}
+                  <p className="text-[12px] text-[#C7C7CC] tracking-[-0.2px]">
+                    {formatRelativeDate(notification.created_at)} · {formatTime(notification.created_at)}
                   </p>
                 </div>
                 {!notification.read && (
-                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 ml-2" />
+                  <div className="w-2 h-2 rounded-full bg-[#EB5B37] mt-2 ml-2 flex-shrink-0" />
                 )}
               </div>
             </button>
