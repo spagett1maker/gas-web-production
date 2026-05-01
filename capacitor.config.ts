@@ -5,6 +5,7 @@ const config: CapacitorConfig = {
   appName: '우리동네가스',
   webDir: 'out',
   server: {
+    url: 'https://homegascare.vercel.app',
     androidScheme: 'https',
   },
   ios: {
