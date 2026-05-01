@@ -267,7 +267,48 @@ Solapi는 발신번호를 등록된 형식과 정확히 일치시켜야 합니�
 
 ---
 
-## 12. 도움이 필요하면
+## 12. 새 머신 / 새 사람 합류 체크리스트
+
+이 레포만 클론해도 작동하는 것 ↔ 별도로 챙겨야 하는 것을 명확히 구분.
+
+### git 클론만으로 즉시 가능
+- [x] 웹 개발 / 빌드 (`.env.local` 포함)
+- [x] Android 빌드 + 서명 (`release.keystore` + 비번)
+- [x] iOS 프로젝트 열기 (`cap:ios`로 Xcode 열림)
+- [x] Edge Function 코드 보기/수정
+
+### 별도로 필요한 외부 자원
+
+| 무엇 | 어떻게 |
+|---|---|
+| **Apple ID 로그인** | Xcode → Settings → Accounts. 자동 서명이 Distribution 인증서까지 발급 |
+| **iOS .p12 백업 (선택)** | `~/Documents/ios-signing-backup-*` (포맷 전 별도 보관 필수, git 금지) |
+| **Supabase 프로젝트 접근** | https://supabase.com/dashboard/project/keiciweliichfgwdzoyc — 본인 계정이 owner. 신규 합류 시 `Add member` |
+| **Solapi 시크릿** | **git에 없음.** Supabase Dashboard → Edge Functions → Secrets에 `SOLAPI_API_KEY` / `SOLAPI_API_SECRET` / `SOLAPI_CALLING_NUMBER` 이미 설정되어 있음. 같은 Supabase 프로젝트를 계속 쓰면 신경 안 써도 됨. 새 Supabase 프로젝트로 마이그레이션할 때만 다시 입력 |
+| **Vercel 프로젝트** | https://vercel.com → `homegascare`. 본인 계정 연결됨. main 브랜치 push 시 자동 배포 |
+| **Apple Developer 콘솔** | https://developer.apple.com — 인증서 revoke/재발급 등 |
+| **App Store Connect** | https://appstoreconnect.apple.com — 빌드 업로드, 메타데이터 |
+| **Play Console** | https://play.google.com/console |
+| **Kakao Developers** | https://developers.kakao.com — REST/JS 키는 .env.local에 이미 있어서 추가 작업 불필요 |
+
+### 새 사람이 합류한다면
+1. GitHub 레포 collaborator 추가
+2. Supabase 프로젝트 멤버 추가 (Edge Function 배포·DB 권한)
+3. Vercel 프로젝트 멤버 추가 (자동 배포 트리거 권한)
+4. (앱 빌드까지 한다면) Apple Developer Program / Play Console 사용자 추가
+5. **이 문서 + `PROJECT_ANALYSIS.md` 읽으라고 안내**
+
+---
+
+## 13. 알려진 이슈
+
+### Fastlane Fastfile의 워크스페이스 경로 오류
+`ios/App/fastlane/Fastfile`이 `workspace: "App.xcworkspace"`를 참조하는데, Capacitor 8은 SPM으로 전환되어 해당 워크스페이스가 존재하지 않습니다. Fastlane을 쓰려면 `workspace:` 라인을 `project: "App.xcodeproj"`로 변경해야 합니다.
+현재 수동(Xcode → Archive → Distribute) 배포만 검증되어 있으며, Fastlane 배포는 동작하지 않는 상태입니다.
+
+---
+
+## 14. 도움이 필요하면
 
 - 빌드/배포 관련: 본 문서 + `package.json` 스크립트
 - 디자인: `DESIGN_SYSTEM.md`
