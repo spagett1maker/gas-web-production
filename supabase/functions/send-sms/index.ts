@@ -36,12 +36,19 @@ function generateSalt(length = 16): string {
   return result
 }
 
-// +821012345678 → 01012345678
-function toLocalPhone(phone: string): string {
-  if (phone.startsWith('+82')) {
-    return '0' + phone.slice(3)
+// 전화번호 정규화: 다양한 형식 → 01012345678
+function normalizePhone(phone: string): string {
+  // 숫자만 추출
+  const digits = phone.replace(/[^0-9]/g, '')
+  // 82로 시작하면 국가코드 제거 후 0 붙임 (821012345678 → 01012345678)
+  if (digits.startsWith('82') && digits.length >= 11) {
+    return '0' + digits.slice(2)
   }
-  return phone
+  // 이미 0으로 시작하면 그대로
+  if (digits.startsWith('0')) {
+    return digits
+  }
+  return digits
 }
 
 Deno.serve(async (req) => {
@@ -59,7 +66,9 @@ Deno.serve(async (req) => {
       )
     }
 
-    const localPhone = toLocalPhone(phone)
+    const localPhone = normalizePhone(phone)
+    const fromNumber = normalizePhone(SOLAPI_CALLING_NUMBER)
+    console.log('발송 대상:', localPhone, '발신번호:', fromNumber)
     const date = new Date().toISOString()
     const salt = generateSalt()
     const signature = await makeSignature(date, salt)
@@ -73,7 +82,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         message: {
           to: localPhone,
-          from: SOLAPI_CALLING_NUMBER,
+          from: fromNumber,
           text: `[우리동네가스] 인증번호 [${otp}]를 입력해주세요.`,
           type: 'SMS',
         },

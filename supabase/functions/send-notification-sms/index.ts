@@ -38,11 +38,15 @@ function generateSalt(length = 16): string {
   return result
 }
 
-function toLocalPhone(phone: string): string {
-  if (phone.startsWith('+82')) {
-    return '0' + phone.slice(3)
+function normalizePhone(phone: string): string {
+  const digits = phone.replace(/[^0-9]/g, '')
+  if (digits.startsWith('82') && digits.length >= 11) {
+    return '0' + digits.slice(2)
   }
-  return phone
+  if (digits.startsWith('0')) {
+    return digits
+  }
+  return digits
 }
 
 function getMessageContent(serviceName: string, status: string): string | null {
@@ -101,7 +105,8 @@ Deno.serve(async (req) => {
       )
     }
 
-    const localPhone = toLocalPhone(profile.phone)
+    const localPhone = normalizePhone(profile.phone)
+    const fromNumber = normalizePhone(SOLAPI_CALLING_NUMBER)
     const date = new Date().toISOString()
     const salt = generateSalt()
     const signature = await makeSignature(date, salt)
@@ -115,7 +120,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         message: {
           to: localPhone,
-          from: SOLAPI_CALLING_NUMBER,
+          from: fromNumber,
           text: message,
           type: 'SMS',
         },
