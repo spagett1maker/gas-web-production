@@ -44,9 +44,12 @@ export async function notifyServiceStatusChange(requestId: string, serviceKey: s
     console.error('알림 생성 실패:', notificationError)
   }
 
-  // 수신자/문구는 Edge Function 이 DB 에서 직접 조회
+  // 수신자/문구는 Edge Function 이 request_id 로 DB 에서 직접 조회.
+  // user_id/service_name/status 는 이전 버전 함수 호환용 (새 함수는 무시) — 함수 재배포 후 제거
   supabase.functions
-    .invoke('send-notification-sms', { body: { request_id: requestId } })
+    .invoke('send-notification-sms', {
+      body: { request_id: requestId, user_id: requestData.user_id, service_name: serviceName, status: newStatus },
+    })
     .then(({ error: smsError }) => {
       if (smsError) {
         console.error('SMS 발송 실패:', smsError)
