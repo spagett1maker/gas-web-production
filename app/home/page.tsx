@@ -437,7 +437,7 @@ export default function HomePage() {
         {activeService && (
           <section className="px-5 py-4 bg-[#f4f5f9]">
             <button
-              onClick={() => router.push(`/my-service/${activeService.id}`)}
+              onClick={() => router.push(`/my-service/detail?id=${activeService.id}`)}
               className="w-full p-4 bg-white rounded-2xl border border-[#F2F2F7] active:bg-[#FAFAFA] transition-colors"
             >
               <div className="flex items-center justify-between">
