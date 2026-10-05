@@ -12,6 +12,19 @@ interface ToastNotification {
   type?: 'service' | 'inquiry' | 'system' | 'default'
 }
 
+const playNotificationSound = () => {
+  // 간단한 알림음 재생 (브라우저 기본 소리)
+  try {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZRQ0PVqzn77BdGAg+lt7xwmwkBTKAy/PVgysFIm/A7uSbSA0NUqnk8LljGgg8kNv0xnMnBSx+yPHYhzUGHWu86+SZRAwRUqjl8Lph==')
+    audio.volume = 0.3
+    audio.play().catch(() => {
+      // 소리 재생 실패 시 무시
+    })
+  } catch (error) {
+    // 에러 무시
+  }
+}
+
 export default function NotificationProvider() {
   const [toasts, setToasts] = useState<ToastNotification[]>([])
   const [userId, setUserId] = useState<string | null>(null)
@@ -74,19 +87,6 @@ export default function NotificationProvider() {
       supabase.removeChannel(channel)
     }
   }, [userId, isAdminPage])
-
-  const playNotificationSound = () => {
-    // 간단한 알림음 재생 (브라우저 기본 소리)
-    try {
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZRQ0PVqzn77BdGAg+lt7xwmwkBTKAy/PVgysFIm/A7uSbSA0NUqnk8LljGgg8kNv0xnMnBSx+yPHYhzUGHWu86+SZRAwRUqjl8Lph==')
-      audio.volume = 0.3
-      audio.play().catch(() => {
-        // 소리 재생 실패 시 무시
-      })
-    } catch (error) {
-      // 에러 무시
-    }
-  }
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id))

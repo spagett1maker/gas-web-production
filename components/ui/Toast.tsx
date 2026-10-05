@@ -42,14 +42,6 @@ export function Toast({ title, message, type = 'default', duration = 5000, onClo
   const [isVisible, setIsVisible] = useState(true)
   const [isExiting, setIsExiting] = useState(false)
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      handleClose()
-    }, duration)
-
-    return () => clearTimeout(timer)
-  }, [duration])
-
   const handleClose = () => {
     setIsExiting(true)
     setTimeout(() => {
@@ -57,6 +49,14 @@ export function Toast({ title, message, type = 'default', duration = 5000, onClo
       onClose()
     }, 300)
   }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleClose()
+    }, duration)
+
+    return () => clearTimeout(timer)
+  }, [duration])
 
   if (!isVisible) return null
 

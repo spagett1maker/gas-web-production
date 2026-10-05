@@ -66,6 +66,7 @@ Edge Function용 시크릿(Solapi 등)은 Supabase Dashboard → Edge Functions 
 | `SOLAPI_API_KEY` | Solapi REST 인증 |
 | `SOLAPI_API_SECRET` | Solapi HMAC 시크릿 |
 | `SOLAPI_CALLING_NUMBER` | 발신 전화번호 (정규화는 함수 내부에서 처리) |
+| `ADMIN_USER_ID` | (선택) `send-notification-sms` 호출을 허용할 관리자 ID. 미설정 시 `lib/constants.ts`의 기본값과 같은 ID 사용 |
 
 ---
 
@@ -107,9 +108,21 @@ supabase secrets set SOLAPI_API_KEY=... SOLAPI_API_SECRET=... SOLAPI_CALLING_NUM
 함수 위치: `supabase/functions/{name}/index.ts`
 
 - `send-sms`: 로그인/회원가입 OTP 발송
-- `send-notification-sms`: 서비스 상태 변경 시 사용자에게 SMS 발송
+- `send-notification-sms`: 서비스 상태 변경 시 사용자에게 SMS 발송. **관리자 토큰으로만 호출 가능**하며 body는 `{ request_id }` 하나. 수신자·서비스명·상태는 함수가 DB에서 직접 조회
 
 전화번호 정규화는 함수 내부 `normalizePhone()`이 처리합니다(`+82`, `82`, `010` 어떤 형태든 `01012345678`로).
+
+### DB 스키마 / RLS 정책 버전관리
+
+테이블 스키마와 RLS 정책은 아직 Supabase 대시보드에만 있고 `supabase/migrations/`에는 없습니다. 아래 명령으로 원격 DB를 baseline migration으로 가져와 커밋하세요(DB 비밀번호 필요: Dashboard → Project Settings → Database).
+
+```bash
+supabase link --project-ref keiciweliichfgwdzoyc
+supabase db pull                       # supabase/migrations/<timestamp>_remote_schema.sql 생성
+supabase migration list                # 원격과 로컬 migration 이력 비교
+```
+
+이후 스키마/RLS 변경은 대시보드가 아니라 `supabase migration new <name>` → `supabase db push`로 진행합니다.
 
 ---
 

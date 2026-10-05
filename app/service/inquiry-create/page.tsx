@@ -263,7 +263,7 @@ export default function InquiryCreatePage() {
             <Info className="w-4 h-4 text-[#C7C7CC] mt-0.5 flex-shrink-0" strokeWidth={1.8} />
             <p className="text-[13px] text-[#C7C7CC] tracking-[-0.2px] leading-[1.6]">
               관리자 확인 후 1~2일 내 답변이 등록됩니다.
-              긴급한 문의는 우선순위를 '높음'으로 설정해 주세요.
+              긴급한 문의는 우선순위를 {"'높음'"}으로 설정해 주세요.
             </p>
           </div>
         </section>
