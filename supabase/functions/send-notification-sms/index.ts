@@ -8,6 +8,21 @@ const SOLAPI_API_SECRET = Deno.env.get('SOLAPI_API_SECRET')!
 const SOLAPI_CALLING_NUMBER = Deno.env.get('SOLAPI_CALLING_NUMBER')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+// 관리자 계정 ID (lib/constants.ts 의 ADMIN_USER_ID 와 동일해야 함)
+const ADMIN_USER_ID = Deno.env.get('ADMIN_USER_ID') ?? 'f0887d78-02cc-4e94-a9a5-76baf8bac9f4'
+
+// 서비스명 매핑 (lib/constants.ts 의 SERVICE_NAME_MAP 과 동일)
+const SERVICE_NAME_MAP: Record<string, string> = {
+  burner: '화구 교체',
+  valve: '밸브 교체',
+  alarm: '경보기 교체',
+  clean: '버너 청소',
+  gas: '가스누출 검사',
+  pipe: '배관 철거',
+  quote: '시공견적 문의',
+  contract: '정기계약 이용권',
+  center: '고객센터',
+}
 
 async function makeSignature(date: string, salt: string): Promise<string> {
   const data = date + salt
@@ -72,16 +87,46 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { user_id, service_name, status } = await req.json()
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    if (!user_id || !service_name || !status) {
+    // 호출자가 관리자인지 확인 (anon key / 일반 사용자 토큰으로는 발송 불가)
+    const token = authHeader.replace(/^Bearer\s+/i, '')
+    const { data: { user: caller }, error: callerError } = await supabaseAdmin.auth.getUser(token)
+    if (callerError || !caller || caller.id !== ADMIN_USER_ID) {
       return new Response(
-        JSON.stringify({ error: 'user_id, service_name, status가 필요합니다.' }),
+        JSON.stringify({ error: '권한이 없습니다.' }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } },
+      )
+    }
+
+    const { request_id } = await req.json()
+
+    if (!request_id) {
+      return new Response(
+        JSON.stringify({ error: 'request_id가 필요합니다.' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } },
       )
     }
 
-    const message = getMessageContent(service_name, status)
+    // 수신자/서비스명/상태는 요청 본문이 아니라 DB 에서 조회
+    const { data: request, error: requestError } = await supabaseAdmin
+      .from('service_requests')
+      .select('user_id, status, services(name)')
+      .eq('id', request_id)
+      .single()
+
+    if (requestError || !request?.user_id) {
+      console.error('서비스 요청 조회 실패:', requestError)
+      return new Response(
+        JSON.stringify({ error: '서비스 요청을 찾을 수 없습니다.' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } },
+      )
+    }
+
+    const serviceKey = (request.services as { name?: string } | null)?.name ?? ''
+    const serviceName = SERVICE_NAME_MAP[serviceKey] || '서비스'
+
+    const message = getMessageContent(serviceName, request.status)
     if (!message) {
       return new Response(
         JSON.stringify({ error: '지원하지 않는 상태입니다.' }),
@@ -89,12 +134,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Service role client로 유저 전화번호 조회
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('phone')
-      .eq('id', user_id)
+      .eq('id', request.user_id)
       .single()
 
     if (profileError || !profile?.phone) {

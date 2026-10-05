@@ -192,11 +192,7 @@ export default function AdminServiceDetailClient({ id }: { id: string }) {
       // SMS 알림 발송 (실패해도 상태 변경은 유지)
       supabase.functions
         .invoke('send-notification-sms', {
-          body: {
-            user_id: requestData.user_id,
-            service_name: SERVICE_NAME_MAP[serviceName] || '서비스',
-            status: newStatus,
-          },
+          body: { request_id: request.id },
         })
         .then(({ error: smsError }) => {
           if (smsError) {
