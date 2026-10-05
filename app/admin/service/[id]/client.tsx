@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { Loading } from '@/components/ui/Loading'
 import { Modal } from '@/components/ui/Modal'
 import { SERVICE_NAME_MAP } from '@/lib/constants'
+import { notifyServiceStatusChange } from '@/lib/serviceNotifications'
 
 interface ServiceRequest {
   id: string
@@ -145,61 +146,7 @@ export default function AdminServiceDetailClient({ id }: { id: string }) {
       return
     }
 
-    const { data: requestData } = await supabase
-      .from('service_requests')
-      .select('user_id')
-      .eq('id', request.id)
-      .single()
-
-    if (requestData?.user_id) {
-      const statusMessages = {
-        진행중: {
-          title: '서비스 요청이 수락되었습니다',
-          message: `${SERVICE_NAME_MAP[serviceName] || '서비스'} 요청이 수락되어 작업이 시작됩니다.`,
-        },
-        완료: {
-          title: '서비스가 완료되었습니다',
-          message: `${SERVICE_NAME_MAP[serviceName] || '서비스'}가 성공적으로 완료되었습니다.`,
-        },
-        취소: {
-          title: '서비스 요청이 취소되었습니다',
-          message: `${SERVICE_NAME_MAP[serviceName] || '서비스'} 요청이 취소되었습니다. 자세한 내용은 고객센터로 문의해주세요.`,
-        },
-      }
-
-      const notificationContent =
-        statusMessages[newStatus as keyof typeof statusMessages] || {
-          title: '서비스 상태가 변경되었습니다',
-          message: `서비스 상태가 [${newStatus}]로 변경되었습니다.`,
-        }
-
-      const insertData = {
-        user_id: requestData.user_id,
-        type: 'service',
-        title: notificationContent.title,
-        message: notificationContent.message,
-        read: false,
-      }
-
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert([insertData])
-
-      if (notificationError) {
-        console.error('알림 생성 실패:', notificationError)
-      }
-
-      // SMS 알림 발송 (실패해도 상태 변경은 유지)
-      supabase.functions
-        .invoke('send-notification-sms', {
-          body: { request_id: request.id },
-        })
-        .then(({ error: smsError }) => {
-          if (smsError) {
-            console.error('SMS 발송 실패:', smsError)
-          }
-        })
-    }
+    await notifyServiceStatusChange(request.id, serviceName, newStatus)
 
     setRequest({ ...request, ...updateData })
 

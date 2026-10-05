@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { SERVICE_NAME_MAP } from '@/lib/constants'
+import { notifyServiceStatusChange } from '@/lib/serviceNotifications'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -127,9 +128,14 @@ export default function AdminDashboardServiceDetailClient({ id }: { id: string }
       .update(updateData)
       .eq('id', request.id)
 
-    if (!error) {
-      setRequest({ ...request, status: newStatus })
+    if (error) {
+      console.error('상태 업데이트 실패:', error)
+      alert('상태 업데이트에 실패했습니다.')
+      return
     }
+
+    setRequest({ ...request, status: newStatus })
+    await notifyServiceStatusChange(request.id, request.services?.name, newStatus)
   }
 
   if (loading) {
