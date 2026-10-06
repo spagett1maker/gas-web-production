@@ -111,7 +111,7 @@ Xcode 16+에서 위 경로로 이동됨 (이전엔 `~/Library/MobileDevice/Provi
 
 | 서비스 | URL | 비고 |
 |---|---|---|
-| **Apple Developer** | https://developer.apple.com/account | 인증서/프로파일 관리, 팀 ID `72B5VAHKRZ` |
+| **Apple Developer** | https://developer.apple.com/account | 인증서/프로파일 관리, 팀 ID `JT84YR3675` |
 | **App Store Connect** | https://appstoreconnect.apple.com | 빌드 업로드, TestFlight, 심사 |
 | **Google Play Console** | https://play.google.com/console | AAB 업로드, 출시 트랙 |
 | **Supabase Dashboard** | https://supabase.com/dashboard/project/keiciweliichfgwdzoyc | DB, Auth, Edge Functions Secrets |
