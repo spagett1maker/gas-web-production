@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
         message: {
           to: localPhone,
           from: fromNumber,
-          text: `[우리동네가스] 인증번호 [${otp}]를 입력해주세요.`,
+          text: `[가스모아] 인증번호 [${otp}]를 입력해주세요.`,
           type: 'SMS',
         },
       }),

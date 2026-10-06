@@ -28,7 +28,7 @@ export async function sendTestNotification() {
     const result = await LocalNotifications.schedule({
       notifications: [
         {
-          title: '우리동네가스',
+          title: '가스모아',
           body: '요청하신 화구 교체 서비스가 접수되었습니다. 기사님이 곧 방문 예정입니다.',
           id: notifId,
           schedule: { at: new Date(Date.now() + 3000) },

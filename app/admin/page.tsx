@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
           <div className="w-12 h-12 bg-[#EB5B37] rounded-xl flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-xl font-bold">G</span>
           </div>
-          <h1 className="text-[22px] font-bold text-[#111827]">우리동네가스</h1>
+          <h1 className="text-[22px] font-bold text-[#111827]">가스모아</h1>
           <p className="text-[14px] text-[#6B7280] mt-1">관리자 로그인</p>
         </div>
 

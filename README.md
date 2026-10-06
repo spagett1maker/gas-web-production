@@ -1,4 +1,4 @@
-# 우리동네가스 (gas-web-2)
+# 가스모아 (gas-web-2)
 
 가스 서비스 예약/관리 하이브리드 모바일 앱.
 **Next.js 16 (정적 export) + Supabase + Capacitor 8 + Tailwind 4**

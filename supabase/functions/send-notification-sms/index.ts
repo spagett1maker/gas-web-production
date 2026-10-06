@@ -67,11 +67,11 @@ function normalizePhone(phone: string): string {
 function getMessageContent(serviceName: string, status: string): string | null {
   switch (status) {
     case '진행중':
-      return `[우리동네가스] ${serviceName} 요청이 수락되어 작업이 시작됩니다.`
+      return `[가스모아] ${serviceName} 요청이 수락되어 작업이 시작됩니다.`
     case '완료':
-      return `[우리동네가스] ${serviceName}가 완료되었습니다. 이용해 주셔서 감사합니다.`
+      return `[가스모아] ${serviceName}가 완료되었습니다. 이용해 주셔서 감사합니다.`
     case '취소':
-      return `[우리동네가스] ${serviceName} 요청이 취소되었습니다. 문의: 1844-0627`
+      return `[가스모아] ${serviceName} 요청이 취소되었습니다. 문의: 1844-0627`
     default:
       return null
   }

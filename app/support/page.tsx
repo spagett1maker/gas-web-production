@@ -1,8 +1,8 @@
 import Image from 'next/image'
 
 export const metadata = {
-  title: '고객 지원 - 우리동네가스',
-  description: '우리동네가스 앱 고객 지원 페이지입니다.',
+  title: '고객 지원 - 가스모아',
+  description: '가스모아 앱 고객 지원 페이지입니다.',
 }
 
 export default function SupportPage() {
@@ -14,8 +14,8 @@ export default function SupportPage() {
           <div className="flex items-center justify-center mb-4">
             <div className="relative w-20 h-20">
               <Image
-                src="/images/logo2.png"
-                alt="우리동네가스 로고"
+                src="/images/gasmoa-symbol.png"
+                alt="가스모아 로고"
                 fill
                 className="object-contain"
               />
@@ -25,7 +25,7 @@ export default function SupportPage() {
             고객 지원
           </h1>
           <p className="text-center text-gray-600 mt-2">
-            우리동네가스 앱 이용에 도움이 필요하신가요?
+            가스모아 앱 이용에 도움이 필요하신가요?
           </p>
         </div>
       </header>
@@ -157,7 +157,7 @@ export default function SupportPage() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">앱 이름</span>
-                <span className="font-medium text-gray-900">우리동네가스</span>
+                <span className="font-medium text-gray-900">가스모아</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">버전</span>
@@ -165,7 +165,7 @@ export default function SupportPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">개발사</span>
-                <span className="font-medium text-gray-900">우리동네가스</span>
+                <span className="font-medium text-gray-900">가스모아</span>
               </div>
             </div>
           </div>
@@ -176,7 +176,7 @@ export default function SupportPage() {
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className="max-w-3xl mx-auto px-6 py-8">
           <p className="text-center text-gray-500 text-sm">
-            © 2024 우리동네가스. All rights reserved.
+            © 2024 가스모아. All rights reserved.
           </p>
           <div className="flex justify-center gap-6 mt-4">
             <a href="/privacy" className="text-sm text-gray-500 hover:text-gray-700">

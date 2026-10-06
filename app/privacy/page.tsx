@@ -32,7 +32,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-[13px] font-semibold text-[#1A1A1A] mb-2">1. 개인정보의 수집 및 이용 목적</h2>
             <p className="text-[12px] text-[#6B6B70] leading-[1.8]">
-              우리동네가스(이하 &quot;회사&quot;)는 다음의 목적을 위하여 개인정보를 처리합니다.
+              가스모아(이하 &quot;회사&quot;)는 다음의 목적을 위하여 개인정보를 처리합니다.
               처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며,
               이용 목적이 변경되는 경우에는 별도의 동의를 받는 등 필요한 조치를 이행할 예정입니다.
             </p>

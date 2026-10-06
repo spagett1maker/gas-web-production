@@ -1166,3 +1166,17 @@ input, textarea, select {
 .haptic-feedback:active {
   transform: scale(0.97);
 }
+
+/* ==========================================
+   모션 최소화 설정 존중 (brand token: respectReducedMotion)
+   ========================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

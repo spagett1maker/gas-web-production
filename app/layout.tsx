@@ -26,7 +26,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "우리동네가스 - 가스 서비스 플랫폼",
+  title: "가스모아 - 가스 서비스 플랫폼",
   description: "가게를 위한 가스 관련 서비스 중개 플랫폼",
 };
 

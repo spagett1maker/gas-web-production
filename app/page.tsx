@@ -36,15 +36,44 @@ export default function SplashPage() {
   }, [router])
 
   return (
-    <div className="fixed inset-0 bg-white flex items-center justify-center">
-      <div className="w-[180px] h-[110px] relative animate-fade-in">
+    <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
+      <div className="flex flex-col items-center">
         <Image
-          src="/images/logo2.png"
-          alt="우리동네가스"
-          fill
-          className="object-contain"
+          src="/images/gasmoa-symbol.png"
+          alt="가스모아"
+          width={112}
+          height={112}
+          className="animate-fade-in-scale"
           priority
         />
+
+        <h1
+          className="mt-5 text-[26px] font-bold tracking-[-0.5px] text-[#173F3B] animate-slide-up"
+          style={{ animationDelay: '120ms', opacity: 0 }}
+        >
+          가스모아
+        </h1>
+
+        <p
+          className="mt-2 text-[14px] text-[#8E8E93] tracking-[-0.2px] animate-slide-up"
+          style={{ animationDelay: '220ms', opacity: 0 }}
+        >
+          안심을 모아, 일상을 가볍게.
+        </p>
+      </div>
+
+      {/* 로딩 인디케이터 */}
+      <div
+        className="absolute left-0 right-0 flex items-center justify-center gap-[6px] animate-fade-in"
+        style={{ bottom: 'calc(72px + env(safe-area-inset-bottom))', animationDelay: '320ms', opacity: 0 }}
+      >
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="w-[6px] h-[6px] rounded-full bg-[#F87537] animate-pulse-dot"
+            style={{ animationDelay: `${i * 160}ms` }}
+          />
+        ))}
       </div>
     </div>
   )

@@ -225,7 +225,7 @@ function PromotionBanners({ onNavigate }: { onNavigate: (path: string) => void }
           >
             <div className="flex-1 pr-3 text-left">
               <span className="inline-block px-2.5 py-0.5 bg-[#EB5B37]/10 rounded-full text-[11px] font-semibold text-[#EB5B37] tracking-[-0.2px] mb-2">
-                우리동네가스 웰컴 혜택
+                가스모아 웰컴 혜택
               </span>
               <h3 className="text-[18px] font-bold text-[#1A1A1A] tracking-[-0.5px] leading-[1.35] pt-1 pl-1">
                 첫 방문 점검<br />무료 서비스
@@ -516,7 +516,7 @@ export default function HomePage() {
               <div className="w-8 h-8 bg-[#EB5B37] rounded-lg flex items-center justify-center">
                 <Phone className="w-4 h-4 text-white" strokeWidth={2.2} />
               </div>
-              <span className="text-[13px] font-semibold text-[#8E8E93] tracking-[-0.2px]">우리동네가스 고객센터</span>
+              <span className="text-[13px] font-semibold text-[#8E8E93] tracking-[-0.2px]">가스모아 고객센터</span>
             </div>
             <p className="text-[28px] font-bold text-[#1A1A1A] tracking-[-1px] mb-1">
               1844-0627

@@ -32,7 +32,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-[13px] font-semibold text-[#1A1A1A] mb-2">제1조 (목적)</h2>
             <p className="text-[12px] text-[#6B6B70] leading-[1.8]">
-              이 약관은 우리동네가스(이하 &quot;회사&quot;)가 제공하는 가스 시설 관리 서비스(이하 &quot;서비스&quot;)의
+              이 약관은 가스모아(이하 &quot;회사&quot;)가 제공하는 가스 시설 관리 서비스(이하 &quot;서비스&quot;)의
               이용 조건 및 절차, 회사와 회원 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
             </p>
           </section>

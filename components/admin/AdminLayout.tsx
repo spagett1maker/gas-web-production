@@ -92,7 +92,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <div className="w-8 h-8 bg-[#EB5B37] rounded-lg flex items-center justify-center">
               <span className="text-white text-sm font-bold">G</span>
             </div>
-            <span className="text-[15px] font-bold text-[#111827]">우리동네가스</span>
+            <span className="text-[15px] font-bold text-[#111827]">가스모아</span>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}

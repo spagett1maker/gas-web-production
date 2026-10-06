@@ -1,4 +1,4 @@
-# 우리동네가스 - 신규 개발자 온보딩
+# 가스모아 - 신규 개발자 온보딩
 
 > 이 문서는 처음 합류하는 개발자가 **로컬 환경 세팅부터 앱 스토어 배포까지** 실행할 수 있도록 작성되었습니다.
 > 코드/구조 분석은 [`PROJECT_ANALYSIS.md`](./PROJECT_ANALYSIS.md), 디자인 토큰은 [`DESIGN_SYSTEM.md`](./DESIGN_SYSTEM.md), 기존 리디자인 배경은 [`REDESIGN_PLAN.md`](./REDESIGN_PLAN.md) 참조.
