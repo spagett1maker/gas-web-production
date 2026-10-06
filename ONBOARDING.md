@@ -21,9 +21,9 @@
 | Node.js | 20 LTS+ | `nvm use` 권장 |
 | npm | 10+ | yarn/pnpm 사용 안 함 |
 | Xcode | 15+ | iOS 빌드용 (Mac only) |
-| CocoaPods | 1.15+ | `sudo gem install cocoapods` |
+| ~~CocoaPods~~ | — | **불필요.** Capacitor 8은 SPM으로 전환되어 Podfile이 없음 |
 | Android Studio | Hedgehog+ | Android 빌드용 |
-| JDK | 17 | Android Gradle Plugin 8.x 호환 |
+| JDK | **21** | Capacitor 8 요구. JDK 17로 빌드 시 `invalid source release: 21` 실패 |
 | Supabase CLI | latest | Edge Function 배포 시 |
 
 ---
@@ -37,8 +37,7 @@ npm install
 # 2) 환경변수 (값은 .env.local 참조 — 이미 커밋되어 있음)
 cp .env.example .env.local
 
-# 3) iOS pod (최초 1회 + Capacitor 플러그인 변경 시)
-cd ios/App && pod install && cd ../..
+# 3) iOS 의존성은 SPM이라 별도 설치 불필요 (Xcode가 자동 해석)
 
 # 4) 개발 서버
 npm run dev    # http://localhost:3000
@@ -135,7 +134,7 @@ npm run cap:ios   # Xcode 열림
 Xcode 작업:
 1. **Signing & Capabilities** → Team 선택 (Apple Developer 계정 필요)
 2. **General → Identity → Version / Build** 증가
-   - `MARKETING_VERSION` (현재 `1.2.0`)
+   - `MARKETING_VERSION` (현재 `1.3.0`)
    - `CURRENT_PROJECT_VERSION` (빌드 번호)
 3. Product → Archive → Distribute App → App Store Connect
 
@@ -160,8 +159,8 @@ Bundle ID: `com.gasservice.app`
 
 `android/app/build.gradle`:
 ```gradle
-versionCode 4    // ← 빌드마다 +1, 정수
-versionName "1.2.1"  // ← 사용자 노출 버전
+versionCode 5    // ← 빌드마다 +1, 정수
+versionName "1.3.0"  // ← 사용자 노출 버전
 ```
 
 ### AAB 빌드

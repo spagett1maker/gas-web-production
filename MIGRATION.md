@@ -183,7 +183,8 @@ cp .env.local .env.example "$DEST/env/"
 ### 6.1 기본 환경
 
 ```bash
-# Xcode (App Store), Android Studio, Node 20 LTS, JDK 17, CocoaPods, Supabase CLI
+# Xcode (App Store), Android SDK, Node 20 LTS, JDK 21, Supabase CLI
+# (Capacitor 8은 SPM 전환으로 CocoaPods 불필요, Android 빌드는 JDK 21 필요)
 # 자세한 사전 요구사항은 ONBOARDING.md 1번 참조
 ```
 
