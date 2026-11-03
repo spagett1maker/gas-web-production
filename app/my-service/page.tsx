@@ -25,7 +25,7 @@ const SERVICE_IMAGES: Record<string, string> = {
   'quote': '/main/시공견적_bright.png',
   'contract': '/main/정기계약_bright.png',
   'center': '/main/고객센터_bright.png',
-  'clean': '/main/cleaning_tight.png',
+  'clean': '/main/화구교체_bright.png',
 }
 
 const getServiceImage = (serviceName: string) => {

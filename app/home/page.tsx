@@ -168,7 +168,7 @@ function NotificationSheet({ onClose }: { onClose: () => void }) {
 
 const SERVICES = [
   { key: 'burner', label: '화구 교체', image: '/main/화구교체_bright.png', desc: '중화 · 버너 · 화구' },
-  { key: 'clean', label: '청소', image: '/main/cleaning_tight.png', desc: '화구 청소' },
+  { key: 'clean', label: '청소', image: '/main/화구교체_bright.png', desc: '화구 청소' },
   { key: 'valve', label: '밸브 교체', image: '/main/밸브_bright.png', desc: '가스 밸브 · 공기조절기' },
   { key: 'alarm', label: '경보기 교체', image: '/main/경보기_bright.png', desc: '경보기 · 감지기' },
   { key: 'gas', label: '가스 점검', image: '/main/가스누출_bright.png', desc: '정기 · 수시 검사' },
